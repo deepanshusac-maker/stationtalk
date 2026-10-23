@@ -40,52 +40,30 @@ export function StationGrid({ participantCounts }: StationGridProps) {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Search & Filters Controls Bar */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-4 rounded-2xl bg-gray-900/60 border border-gray-800 backdrop-blur-sm">
+    <div className="space-y-5">
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2">
         <SearchBar onSearch={handleSearch} />
         <RegionFilter selected={selectedRegion} onChange={setSelectedRegion} />
       </div>
 
-      {/* Results Meta */}
-      <div className="flex items-center justify-between px-1 text-xs font-mono text-gray-500">
-        <div>
-          Showing <span className="text-amber-400 font-semibold">{filteredStations.length}</span> of{' '}
-          <span className="text-gray-300">{STATIONS.length}</span> Platforms
-          {selectedRegion && (
-            <span className="ml-2 px-2 py-0.5 rounded bg-gray-800 text-gray-300 capitalize">
-              Line: {selectedRegion}
-            </span>
-          )}
-        </div>
-
-        {(selectedRegion !== null || searchQuery !== '') && (
-          <button
-            onClick={handleReset}
-            className="text-amber-400 hover:text-amber-300 underline underline-offset-4 transition-colors"
-          >
-            Reset Filters
-          </button>
-        )}
-      </div>
-
-      {/* Grid of Stations */}
+      {/* Grid of Station Cards */}
       {filteredStations.length === 0 ? (
-        <div className="text-center py-16 px-4 rounded-2xl bg-gray-900/40 border border-gray-800/80">
-          <div className="text-4xl mb-3">🚉</div>
-          <h3 className="text-lg font-bold text-white mb-1">No Platforms Found</h3>
-          <p className="text-sm text-gray-400 max-w-sm mx-auto mb-6">
-            No station lines matched your search or filter. Try a different query or reset filters.
+        <div className="text-center py-16 px-4 rounded-2xl bg-[#131926] border border-[#212b3c]">
+          <div className="text-3xl mb-2">🔍</div>
+          <h3 className="text-base font-bold text-white mb-1">No stations found</h3>
+          <p className="text-xs text-gray-400 max-w-xs mx-auto mb-4">
+            Try searching for a different city, state, or reset your filters.
           </p>
           <button
             onClick={handleReset}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 transition-all shadow-md shadow-amber-500/20"
+            className="px-4 py-2 rounded-xl bg-teal-500 text-gray-950 font-bold text-xs hover:bg-teal-400 transition-all shadow-md shadow-teal-500/20"
           >
             Show All {STATIONS.length} Stations
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredStations.map((station) => (
             <StationCard
               key={station.slug}
@@ -95,13 +73,6 @@ export function StationGrid({ participantCounts }: StationGridProps) {
           ))}
         </div>
       )}
-
-      {/* Seed Notice */}
-      <div className="p-3 rounded-xl bg-gray-900/40 border border-gray-800/60 text-center">
-        <p className="text-xs text-gray-500 font-mono">
-          ℹ️ Seed station records for demonstration. Selecting any station connects to a live LiveKit room.
-        </p>
-      </div>
     </div>
   );
 }

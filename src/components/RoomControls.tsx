@@ -59,7 +59,7 @@ export function RoomControls({ onLeave, onRequestSpeak }: RoomControlsProps) {
             onClick={toggleMute}
             aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
             title={isMuted ? 'Unmute microphone (Press M)' : 'Mute microphone (Press M)'}
-            className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400 ${
+            className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 ${
               isMuted
                 ? 'bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25'
                 : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 shadow-lg shadow-emerald-500/10'
@@ -88,7 +88,7 @@ export function RoomControls({ onLeave, onRequestSpeak }: RoomControlsProps) {
             onClick={onRequestSpeak}
             aria-label="Request microphone"
             title="Request microphone to speak on stage"
-            className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="p-3.5 sm:p-4 rounded-2xl bg-teal-500/15 text-teal-300 border border-teal-500/30 hover:bg-teal-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />

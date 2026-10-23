@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #080c14;
+  --background: #0b0f17;
   --foreground: #f3f4f6;
 }
 
@@ -19,25 +19,10 @@ body {
   overflow-x: hidden;
 }
 
-/* Railway grid pattern background */
+/* Subtle clean dark pattern */
 .bg-concourse-pattern {
-  background-image: radial-gradient(rgba(245, 158, 11, 0.08) 1px, transparent 0);
-  background-size: 28px 28px;
-  background-position: -19px -19px;
-}
-
-/* Glowing amber border animation */
-@keyframes amberGlow {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(245, 158, 11, 0.2), inset 0 0 15px rgba(245, 158, 11, 0.05);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(245, 158, 11, 0.4), inset 0 0 25px rgba(245, 158, 11, 0.1);
-  }
-}
-
-.amber-glow {
-  animation: amberGlow 3s ease-in-out infinite;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
 /* Audio wave animation */
@@ -62,7 +47,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: #0b0f17;
 }
 ::-webkit-scrollbar-thumb {
   background: #1f2937;

@@ -7,12 +7,12 @@ interface RegionFilterProps {
   onChange: (region: Region | null) => void;
 }
 
-const REGION_INFO: Record<Region, { label: string; icon: string }> = {
-  central: { label: 'Central Hub', icon: '🏛️' },
-  north: { label: 'Northern Line', icon: '🧭' },
-  south: { label: 'South Coast', icon: '🌊' },
-  east: { label: 'East Express', icon: '🌅' },
-  west: { label: 'Pacific West', icon: '🌄' },
+const REGION_LABELS: Record<Region, string> = {
+  south: 'South',
+  north: 'North',
+  central: 'Central',
+  west: 'West',
+  east: 'East',
 };
 
 export function RegionFilter({ selected, onChange }: RegionFilterProps) {
@@ -23,28 +23,26 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-wrap items-center gap-1.5"
       role="radiogroup"
-      aria-label="Filter stations by transit line"
+      aria-label="Filter stations by region"
     >
       <button
         role="radio"
         aria-checked={selected === null}
         onClick={() => onChange(null)}
-        className={`px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all focus:outline-none focus:ring-2 focus:ring-amber-400 ${
+        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all focus:outline-none ${
           selected === null
-            ? 'bg-amber-500 text-gray-950 font-bold shadow-md shadow-amber-500/25 ring-1 ring-amber-400'
-            : 'bg-gray-900 border border-gray-800 text-gray-300 hover:border-gray-700 hover:text-white'
+            ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-sm'
+            : 'bg-[#131926] border border-[#212b3c] text-gray-400 hover:text-gray-200'
         }`}
       >
-        <span>All Lines</span>
-        <span className="ml-1.5 opacity-70 text-[10px]">({getCount()})</span>
+        <span>All ({getCount()})</span>
       </button>
 
       {REGIONS.map((region) => {
-        const info = REGION_INFO[region];
-        const count = getCount(region);
         const isSelected = selected === region;
+        const count = getCount(region);
 
         return (
           <button
@@ -52,14 +50,14 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
             role="radio"
             aria-checked={isSelected}
             onClick={() => onChange(region)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all focus:outline-none focus:ring-2 focus:ring-amber-400 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all focus:outline-none ${
               isSelected
-                ? 'bg-amber-500 text-gray-950 font-bold shadow-md shadow-amber-500/25 ring-1 ring-amber-400'
-                : 'bg-gray-900 border border-gray-800 text-gray-300 hover:border-gray-700 hover:text-white'
+                ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-sm'
+                : 'bg-[#131926] border border-[#212b3c] text-gray-400 hover:text-gray-200'
             }`}
           >
-            <span>{info.icon} {info.label}</span>
-            <span className="ml-1.5 opacity-70 text-[10px]">({count})</span>
+            <span>{REGION_LABELS[region]}</span>
+            <span className="ml-1 opacity-60 text-[10px]">({count})</span>
           </button>
         );
       })}

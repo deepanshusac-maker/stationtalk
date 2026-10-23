@@ -492,9 +492,9 @@ function RoomViewInner({
   // Connection State: Connecting
   if (connectionState === ConnectionState.Connecting) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-concourse-pattern">
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-[#0b0f17]">
         <div className="text-center font-mono">
-          <svg className="animate-spin h-10 w-10 text-amber-400 mx-auto mb-4" viewBox="0 0 24 24">
+          <svg className="animate-spin h-10 w-10 text-teal-400 mx-auto mb-4" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
@@ -508,10 +508,10 @@ function RoomViewInner({
   // Connection State: Reconnecting
   if (connectionState === ConnectionState.Reconnecting) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-concourse-pattern">
-        <div className="text-center font-mono max-w-sm p-8 rounded-2xl bg-gray-900 border border-amber-500/30">
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-[#0b0f17]">
+        <div className="text-center font-mono max-w-sm p-8 rounded-2xl bg-[#131926] border border-teal-500/30">
           <div className="text-4xl mb-4 animate-bounce">📡</div>
-          <p className="text-amber-400 font-bold text-lg mb-1">Reconnecting Signal...</p>
+          <p className="text-teal-400 font-bold text-lg mb-1">Reconnecting Signal...</p>
           <p className="text-gray-400 text-xs">Network hiccup detected. LiveKit SFU is restoring your connection.</p>
         </div>
       </div>
@@ -521,23 +521,23 @@ function RoomViewInner({
   // Connection State: Disconnected (Recoverable UI)
   if (connectionState === ConnectionState.Disconnected) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-concourse-pattern">
-        <div className="text-center max-w-md p-8 rounded-2xl bg-gray-900 border border-gray-800 shadow-2xl">
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-[#0b0f17]">
+        <div className="text-center max-w-md p-8 rounded-2xl bg-[#131926] border border-[#212b3c] shadow-2xl">
           <div className="text-4xl mb-4">🔌</div>
-          <h2 className="text-xl font-bold mb-2">Platform Disconnected</h2>
+          <h2 className="text-xl font-bold mb-2 text-white">Platform Disconnected</h2>
           <p className="text-gray-400 text-xs mb-6">
             You have left or been disconnected from {station.name}.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={onReconnect}
-              className="flex-1 py-3 bg-amber-500 text-gray-950 font-bold rounded-xl hover:bg-amber-400 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="flex-1 py-3 bg-teal-500 text-gray-950 font-bold rounded-xl hover:bg-teal-400 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400"
             >
               🔄 Reconnect
             </button>
             <button
               onClick={onLeave}
-              className="flex-1 py-3 bg-gray-800 text-gray-300 font-semibold rounded-xl hover:bg-gray-700 transition-all border border-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="flex-1 py-3 bg-[#182132] text-gray-300 font-semibold rounded-xl hover:bg-[#202b40] transition-all border border-[#293750] focus:outline-none focus:ring-2 focus:ring-teal-400"
             >
               ← Concourse
             </button>
@@ -548,12 +548,12 @@ function RoomViewInner({
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between bg-concourse-pattern">
+    <div className="flex-1 flex flex-col justify-between bg-[#0b0f17]">
       {/* Top Station Header & Status Bar */}
-      <header className="bg-gray-950/80 border-b border-gray-800/80 px-4 py-3 backdrop-blur-md sticky top-16 z-40">
+      <header className="bg-[#0e1420]/90 border-b border-[#1b2333] px-4 py-3 backdrop-blur-md sticky top-16 z-40">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-amber-400 border border-gray-700">
+            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[#161d2b] text-teal-300 border border-[#232d42]">
               PF {platformNumber}
             </span>
             <div>
@@ -564,7 +564,7 @@ function RoomViewInner({
                 </span>
               </h1>
               <p className="text-[11px] font-mono text-gray-400">
-                {station.region.toUpperCase()} LINE • {participants.length} {participants.length === 1 ? 'PERSON' : 'PEOPLE'} IN STATION
+                {station.city} · {station.state} • {participants.length} {participants.length === 1 ? 'PERSON' : 'PEOPLE'} IN STATION
               </p>
             </div>
           </div>
@@ -573,7 +573,7 @@ function RoomViewInner({
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg bg-gray-800/80 border border-gray-700/80 hover:bg-gray-700 text-xs font-mono text-gray-300 transition-all flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400"
+              className="px-3 py-1.5 rounded-lg bg-[#161d2b] border border-[#232d42] hover:bg-[#1f293d] text-xs font-mono text-gray-300 transition-all flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400"
               title="Copy room link to invite listeners"
             >
               {copied ? (
@@ -591,7 +591,7 @@ function RoomViewInner({
 
             <Link
               href="/stations"
-              className="px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 hover:bg-gray-800 text-xs font-mono text-gray-400 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-[#161d2b] border border-[#232d42] hover:bg-[#1f293d] text-xs font-mono text-gray-400 transition-colors"
             >
               Concourse
             </Link>
@@ -617,7 +617,7 @@ function RoomViewInner({
             </div>
             <button
               onClick={() => startAudio()}
-              className="px-4 py-2 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap"
+              className="px-4 py-2 rounded-xl bg-teal-500 text-gray-950 font-bold text-xs hover:bg-teal-400 transition-all shadow-md shadow-teal-500/20 whitespace-nowrap"
             >
               Unmute Room Audio
             </button>
@@ -626,12 +626,12 @@ function RoomViewInner({
 
         {/* Stage Speakers Section */}
         <div className="mb-10">
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-800">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#1b2333]">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold font-mono tracking-wider text-amber-400 uppercase">
+              <span className="text-sm font-bold font-mono tracking-wider text-teal-400 uppercase">
                 🎙️ Stage Speakers
               </span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
                 {speakers.length} / 7 Max
               </span>
             </div>
@@ -647,7 +647,7 @@ function RoomViewInner({
               ))}
             </div>
           ) : (
-            <div className="p-8 rounded-2xl bg-gray-900/30 border border-dashed border-gray-800 text-center">
+            <div className="p-8 rounded-2xl bg-[#131926] border border-dashed border-[#212b3c] text-center">
               <div className="text-3xl mb-2">🎙️</div>
               <p className="text-sm text-gray-400 font-medium">The stage is currently open.</p>
               <p className="text-xs text-gray-500 mt-1">
@@ -659,12 +659,12 @@ function RoomViewInner({
 
         {/* Platform Listeners / Audience Section */}
         <div>
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-800">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#1b2333]">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold font-mono tracking-wider text-gray-300 uppercase">
                 🎧 Concourse Audience
               </span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-[#161d2b] text-gray-400 border border-[#232d42]">
                 {listeners.length} Listening
               </span>
             </div>
@@ -704,10 +704,10 @@ function RoomViewInner({
       )}
 
       {/* Sticky Bottom Controls */}
-      <footer className="border-t border-gray-800/80 bg-gray-950/90 backdrop-blur-md py-4 sticky bottom-0 z-40">
+      <footer className="border-t border-[#1b2333] bg-[#0e1420]/95 backdrop-blur-md py-4 sticky bottom-0 z-40">
         <div className="max-w-5xl mx-auto px-4 flex flex-col items-center gap-3">
           {/* Main Primary Microphone / Speak Action */}
-          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-gray-900/80 border border-gray-800">
+          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-[#131926] border border-[#212b3c]">
             <div className="flex items-center gap-2.5 text-center sm:text-left">
               <span className="text-lg">
                 {isCanPublish ? '🎙️' : '🎧'}
@@ -730,7 +730,7 @@ function RoomViewInner({
                 <button
                   onClick={handleToggleSpeak}
                   disabled={promoting}
-                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium border border-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#182132] hover:bg-[#202b40] text-gray-300 text-xs font-medium border border-[#293750] transition-all focus:outline-none focus:ring-2 focus:ring-teal-400"
                 >
                   {promoting ? 'Updating...' : 'Step Down to Listener'}
                 </button>
@@ -738,7 +738,7 @@ function RoomViewInner({
                 <button
                   onClick={handleToggleSpeak}
                   disabled={promoting}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 disabled:opacity-50 transition-all shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-teal-500 text-gray-950 font-bold text-xs hover:bg-teal-400 disabled:opacity-50 transition-all shadow-md shadow-teal-500/20 flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-teal-400"
                 >
                   {promoting ? (
                     <span>Requesting Stage...</span>
