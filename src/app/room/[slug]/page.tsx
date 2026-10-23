@@ -300,6 +300,16 @@ function RoomPageContent() {
       video={false}
       onDisconnected={handleLeave}
       onError={(err) => {
+        // Ignore expected client-initiated disconnects or aborted connections
+        const msg = (err?.message || '').toLowerCase();
+        if (
+          msg.includes('client initiated disconnect') ||
+          msg.includes('abort') ||
+          msg.includes('cancelled') ||
+          msg.includes('canceled')
+        ) {
+          return;
+        }
         console.error('LiveKit connection error:', err.message);
         setJoinState({
           status: 'error',
@@ -373,15 +383,14 @@ function RoomViewInner({
     };
   }, [room]);
 
-  // Clean up media tracks and disconnect if component unmounts while connected
+  // Ensure local microphone track is released if component unmounts
   useEffect(() => {
     return () => {
       if (localParticipant?.isMicrophoneEnabled) {
         localParticipant.setMicrophoneEnabled(false).catch(() => {});
       }
-      room?.disconnect();
     };
-  }, [localParticipant, room]);
+  }, [localParticipant]);
 
   const speakers = participants.filter((p) => p.permissions?.canPublish);
   const listeners = participants.filter((p) => !p.permissions?.canPublish);
