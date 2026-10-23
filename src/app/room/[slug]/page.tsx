@@ -16,6 +16,9 @@ import { ConnectionState, RoomEvent } from 'livekit-client';
 import { getStation, type Station, STATIONS } from '@/lib/stations';
 import { ParticipantTile } from '@/components/ParticipantTile';
 import { RoomControls } from '@/components/RoomControls';
+import { generateRandomName, getOrInitAnonymousName } from '@/lib/anonymousNames';
+import { transitChime } from '@/lib/chime';
+import { AvatarCapsule } from '@/components/AvatarCapsule';
 
 type JoinState =
   | { status: 'idle' }
@@ -25,12 +28,16 @@ type JoinState =
 
 function subscribeStorage(callback: () => void) {
   window.addEventListener('storage', callback);
-  return () => window.removeEventListener('storage', callback);
+  window.addEventListener('stationtalk_name_change', callback);
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener('stationtalk_name_change', callback);
+  };
 }
 
 function getStoredNameSnapshot(): string {
   try {
-    return localStorage.getItem('stationtalk_passenger_name') || '';
+    return localStorage.getItem('stationtalk_display_name') || localStorage.getItem('stationtalk_passenger_name') || '';
   } catch {
     return '';
   }
@@ -83,21 +90,21 @@ function RoomPageContent() {
   const platformNumber = String(stationIndex + 1).padStart(2, '0');
 
   const handleRandomName = useCallback(() => {
-    const num = Math.floor(100 + Math.random() * 900);
-    const prefixes = ['Traveller', 'Commuter', 'Rider', 'Voyager', 'Passenger'];
-    const chosen = `${prefixes[Math.floor(Math.random() * prefixes.length)]} #${num}`;
+    const chosen = generateRandomName();
     setCustomName(chosen);
     try {
+      localStorage.setItem('stationtalk_display_name', chosen);
       localStorage.setItem('stationtalk_passenger_name', chosen);
+      window.dispatchEvent(new Event('stationtalk_name_change'));
     } catch {
       // Ignore storage errors
     }
   }, []);
 
   const handleJoin = useCallback(async () => {
-    const name = displayName.trim();
+    const name = (displayName.trim() || getOrInitAnonymousName());
     if (!name) {
-      setError('Please enter your name or click Quick Random.');
+      setError('Please enter your name or click Shuffle Persona.');
       return;
     }
     if (name.length > 50) {
@@ -109,6 +116,7 @@ function RoomPageContent() {
     setJoinState({ status: 'joining' });
 
     try {
+      localStorage.setItem('stationtalk_display_name', name);
       localStorage.setItem('stationtalk_passenger_name', name);
     } catch {
       // Ignore storage errors
@@ -130,6 +138,7 @@ function RoomPageContent() {
       }
 
       const { token, url, identity } = await res.json();
+      transitChime.playArrivalChime();
       setJoinState({
         status: 'connected',
         token,
@@ -154,16 +163,16 @@ function RoomPageContent() {
   // --- 404: Unregistered Station ---
   if (notFound) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 min-h-[70vh] bg-concourse-pattern">
-        <div className="text-center max-w-md p-8 rounded-2xl bg-gray-900 border border-gray-800 shadow-2xl">
+      <div className="flex-1 flex items-center justify-center p-4 min-h-[70vh] bg-[#0b0f17]">
+        <div className="text-center max-w-md p-8 rounded-2xl bg-[#131926] border border-[#212b3c] shadow-2xl">
           <div className="text-5xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold mb-2">Platform Not Found</h1>
+          <h1 className="text-2xl font-bold mb-2 text-white">Platform Not Found</h1>
           <p className="text-gray-400 text-sm mb-6">
             The platform &ldquo;{slug}&rdquo; is not part of the active railway registry.
           </p>
           <button
             onClick={handleBackToConcourse}
-            className="w-full py-3 bg-amber-500 text-gray-950 font-bold rounded-xl hover:bg-amber-400 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="w-full py-3 bg-teal-500 text-gray-950 font-bold rounded-xl hover:bg-teal-400 transition-all focus:outline-none focus:ring-2 focus:ring-teal-400"
           >
             ← Return to Concourse
           </button>
@@ -183,13 +192,13 @@ function RoomPageContent() {
   // --- Join Form: Passenger Boarding Pass ---
   if (joinState.status === 'idle' || joinState.status === 'joining' || joinState.status === 'error') {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 bg-concourse-pattern py-12">
+      <div className="flex-1 flex items-center justify-center p-4 bg-[#0b0f17] py-12">
         <div className="w-full max-w-lg">
           {/* Breadcrumb Return */}
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={handleBackToConcourse}
-              className="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-400 rounded px-1.5 py-0.5"
+              className="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-1 focus:ring-teal-400 rounded px-1.5 py-0.5"
             >
               <span>← Back to Concourse</span>
             </button>
@@ -199,22 +208,22 @@ function RoomPageContent() {
           </div>
 
           {/* Passenger Boarding Pass Card */}
-          <div className="bg-gray-900/90 backdrop-blur-md border border-gray-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-amber-300 to-amber-600" />
+          <div className="bg-[#131926] backdrop-blur-md border border-[#212b3c] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-600" />
 
-            <div className="flex items-start justify-between border-b border-gray-800/80 pb-5 mb-6">
+            <div className="flex items-start justify-between border-b border-[#1f293b] pb-5 mb-6">
               <div>
-                <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
                   PLATFORM BOARDING
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
                   {station.name}
                 </h1>
-                <p className="text-xs text-gray-400 mt-1">{station.description}</p>
+                <p className="text-xs text-gray-400 mt-1">{station.city} · {station.state} • {station.description}</p>
               </div>
 
               <div className="text-right font-mono">
-                <span className="text-2xl font-black text-amber-400">PF {platformNumber}</span>
+                <span className="text-2xl font-black text-teal-400">PF {platformNumber}</span>
                 <span className="block text-[10px] text-gray-500 uppercase">{station.region} Line</span>
               </div>
             </div>
@@ -223,33 +232,34 @@ function RoomPageContent() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label htmlFor="display-name" className="text-xs font-mono text-gray-300">
-                    Your Name
+                    Your Anonymous Handle
                   </label>
                   <button
                     type="button"
                     onClick={handleRandomName}
-                    className="text-[11px] font-mono text-amber-400 hover:text-amber-300 underline underline-offset-2"
+                    className="text-[11px] font-mono text-teal-400 hover:text-teal-300 underline underline-offset-2 flex items-center gap-1"
                   >
-                    🎲 Quick Random
+                    <span>🎲</span>
+                    <span>Shuffle Persona</span>
                   </button>
                 </div>
 
-                <div className="relative">
+                <div className="relative flex items-center">
                   <input
                     id="display-name"
                     type="text"
-                    placeholder="Enter your name..."
+                    placeholder="Enter anonymous name..."
                     value={displayName}
                     onChange={(e) => setCustomName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
                     maxLength={50}
                     disabled={joinState.status === 'joining'}
                     suppressHydrationWarning
-                    className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium transition-all"
+                    className="w-full pl-4 pr-14 py-3 bg-[#0e1420] border border-[#242f44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-400/50 focus:border-teal-400 font-medium transition-all text-sm"
                   />
                   {displayName.trim() && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs flex items-center justify-center border border-amber-500/30">
-                      {displayName.trim()[0].toUpperCase()}
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <AvatarCapsule name={displayName} size="sm" showEyes={true} />
                     </div>
                   )}
                 </div>
@@ -279,7 +289,7 @@ function RoomPageContent() {
                 <button
                   onClick={handleJoin}
                   disabled={joinState.status === 'joining'}
-                  className="w-full py-3.5 bg-amber-500 text-gray-950 font-bold text-sm rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full py-3.5 bg-teal-500 text-gray-950 font-bold text-sm rounded-xl hover:bg-teal-400 disabled:opacity-50 transition-all shadow-lg shadow-teal-500/20 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-teal-400"
                 >
                   {joinState.status === 'joining' ? (
                     <span className="flex items-center gap-2">

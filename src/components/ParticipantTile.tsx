@@ -16,18 +16,18 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
 
   return (
     <div className="flex flex-col items-center gap-2.5 p-4 rounded-2xl bg-[#131926] border border-[#212b3c] hover:border-[#334158] transition-all duration-200 shadow-md">
-      {/* Avatar Container */}
+      {/* Avatar Container with speaking glow */}
       <div
         className={`relative transition-all duration-200 ${
           isSpeaking
-            ? 'ring-4 ring-emerald-400 ring-offset-4 ring-offset-[#0b0f17] scale-105'
+            ? 'ring-4 ring-emerald-400 ring-offset-4 ring-offset-[#0b0f17] scale-105 shadow-lg shadow-emerald-500/25'
             : ''
         }`}
       >
         <AvatarCapsule
           name={displayName}
           size="lg"
-          showEyes={displayName.length <= 4}
+          showEyes={displayName.length <= 4 || displayName.toLowerCase().includes('passenger')}
           className="shadow-lg"
         />
 
@@ -58,8 +58,8 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
         )}
       </div>
 
-      {/* Name & Speaking Wave Indicator */}
-      <div className="flex flex-col items-center gap-1 text-center">
+      {/* Name & Animated Speaking Decibel Visualizer */}
+      <div className="flex flex-col items-center gap-1.5 text-center">
         <span
           className="text-xs sm:text-sm font-semibold text-white truncate max-w-[5.5rem] sm:max-w-[7rem]"
           title={displayName}
@@ -68,14 +68,14 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
         </span>
 
         {isSpeaking ? (
-          <div className="flex items-center gap-0.5 h-3">
-            <span className="w-0.5 bg-emerald-400 rounded-full animate-pulse h-3" />
-            <span className="w-0.5 bg-emerald-400 rounded-full animate-pulse h-2" />
-            <span className="w-0.5 bg-emerald-400 rounded-full animate-pulse h-3.5" />
-            <span className="w-0.5 bg-emerald-400 rounded-full animate-pulse h-2" />
+          <div className="flex items-end gap-0.5 h-4 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-1" />
+            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-2" />
+            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-3" />
+            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-4" />
           </div>
         ) : (
-          <span className="text-[10px] font-mono text-gray-400 uppercase">
+          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
             {canPublish ? 'Speaker' : 'Listener'}
           </span>
         )}

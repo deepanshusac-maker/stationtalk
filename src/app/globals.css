@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono), monospace;
 }
 
 body {
@@ -17,6 +17,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
+  letter-spacing: -0.011em;
 }
 
 /* Subtle clean dark pattern */
@@ -40,6 +41,37 @@ body {
 .wave-bar-3 { animation: soundWave 0.7s ease-in-out infinite 0.4s; }
 .wave-bar-4 { animation: soundWave 0.9s ease-in-out infinite 0.1s; }
 .wave-bar-5 { animation: soundWave 1.2s ease-in-out infinite 0.3s; }
+
+/* Real-time speaking audio level bounce */
+@keyframes bounceWave {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.6;
+  }
+  50% {
+    height: 14px;
+    opacity: 1;
+  }
+}
+
+.speaking-bar-1 { animation: bounceWave 0.55s ease-in-out infinite; }
+.speaking-bar-2 { animation: bounceWave 0.42s ease-in-out infinite 0.15s; }
+.speaking-bar-3 { animation: bounceWave 0.68s ease-in-out infinite 0.3s; }
+.speaking-bar-4 { animation: bounceWave 0.48s ease-in-out infinite 0.2s; }
+
+/* Gentle pulse glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(20, 184, 166, 0);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {

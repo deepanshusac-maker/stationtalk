@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Suspense, useSyncExternalStore, useState, useCallback } from 'react';
+import { Suspense, useSyncExternalStore, useState, useCallback, useEffect } from 'react';
 import { usePresence } from '@/lib/usePresence';
 import { AvatarCapsule } from './AvatarCapsule';
+import { getOrInitAnonymousName, shuffleAnonymousName } from '@/lib/anonymousNames';
 
-// Hydration-safe localStorage subscriber for user's display name
+// Hydration-safe localStorage subscriber for user's anonymous display name
 function subscribeToDisplayName(callback: () => void) {
   window.addEventListener('storage', callback);
   window.addEventListener('stationtalk_name_change', callback);
@@ -36,13 +37,29 @@ function NavbarContent() {
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
+  const [shuffling, setShuffling] = useState(false);
 
-  const displayName = savedName || 'Aditya';
+  // Initialize random anonymous name automatically if not yet present
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('stationtalk_display_name')) {
+      getOrInitAnonymousName();
+      window.dispatchEvent(new Event('stationtalk_name_change'));
+    }
+  }, []);
+
+  const displayName = savedName || 'Curious Traveler';
+
+  const handleShuffle = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setShuffling(true);
+    shuffleAnonymousName();
+    setTimeout(() => setShuffling(false), 400);
+  }, []);
 
   const handleOpenEdit = useCallback(() => {
-    setTempName(savedName || 'Aditya');
+    setTempName(displayName);
     setIsEditingName(true);
-  }, [savedName]);
+  }, [displayName]);
 
   const handleSaveName = useCallback(
     (e: React.FormEvent) => {
@@ -65,17 +82,16 @@ function NavbarContent() {
     <>
       <header className="sticky top-0 z-50 bg-[#0d121c]/90 backdrop-blur-md border-b border-[#1b2333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Left: Brand Logo & 1-to-1 / Concourse Link */}
+          {/* Left: Brand Logo & Arrivals Link */}
           <div className="flex items-center gap-4">
             <Link
               href="/stations"
               className="flex items-center gap-2 group focus:outline-none"
             >
-              {/* Circular/Pill badge icon matching screenshot */}
               <div className="w-8 h-8 rounded-full bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold text-xs shadow-inner">
                 talk
               </div>
-              <span className="text-lg font-bold tracking-tight text-white group-hover:text-teal-300 transition-colors">
+              <span className="text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-teal-300 transition-colors">
                 stationtalk
               </span>
             </Link>
@@ -93,23 +109,37 @@ function NavbarContent() {
             </Link>
           </div>
 
-          {/* Center: User Profile Chip */}
-          <div className="flex items-center">
-            <button
-              onClick={handleOpenEdit}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161d2b] hover:bg-[#1f293d] border border-[#232d42] transition-all text-xs font-medium text-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-400/50"
-              title="Click to edit your display name"
-            >
-              <AvatarCapsule name={displayName} size="sm" showEyes={true} />
-              <span className="truncate max-w-[100px] sm:max-w-[140px] font-semibold text-white">
-                {displayName}
-              </span>
-            </button>
+          {/* Center: Anonymous Persona Chip + 1-Click Shuffle Tool */}
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center bg-[#151c29] hover:bg-[#1b2434] border border-[#232d40] rounded-full p-1 pl-2 transition-all shadow-sm">
+              <button
+                onClick={handleOpenEdit}
+                className="flex items-center gap-2 text-xs font-semibold text-white focus:outline-none pr-1.5"
+                title="Click to view or edit anonymous identity"
+              >
+                <AvatarCapsule name={displayName} size="sm" showEyes={true} />
+                <span className="truncate max-w-[100px] sm:max-w-[140px] font-semibold">
+                  {displayName}
+                </span>
+              </button>
+
+              {/* 1-Click Instant Persona Shuffle */}
+              <button
+                onClick={handleShuffle}
+                className={`p-1.5 rounded-full hover:bg-[#253249] text-gray-400 hover:text-teal-300 transition-all text-xs focus:outline-none ${
+                  shuffling ? 'rotate-180 scale-125' : ''
+                }`}
+                title="🎲 Shuffle Anonymous Name"
+                aria-label="Shuffle anonymous identity"
+              >
+                🎲
+              </button>
+            </div>
           </div>
 
           {/* Right: Live Counter & Navigation */}
           <div className="flex items-center gap-3">
-            {/* Live Indicator */}
+            {/* Real Live Indicator */}
             <div className="flex items-center gap-1.5 text-xs font-mono">
               <span className="relative flex h-2 w-2">
                 {realOnlineTotal > 0 && (
@@ -141,12 +171,15 @@ function NavbarContent() {
         </div>
       </header>
 
-      {/* Name Edit Modal */}
+      {/* Name / Anonymous Identity Modal */}
       {isEditingName && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-sm rounded-2xl bg-[#131926] border border-[#242f44] p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-white">Your Concourse Pass</h3>
+              <div>
+                <h3 className="text-base font-bold text-white">Anonymous Identity</h3>
+                <p className="text-[11px] text-gray-400">Your anonymous handle in all voice rooms.</p>
+              </div>
               <button
                 onClick={() => setIsEditingName(false)}
                 className="text-gray-400 hover:text-white text-sm"
@@ -154,36 +187,55 @@ function NavbarContent() {
                 ✕
               </button>
             </div>
+
+            <div className="flex items-center justify-center py-4">
+              <div className="text-center">
+                <AvatarCapsule name={tempName} size="lg" showEyes={true} className="mx-auto mb-2" />
+                <span className="text-sm font-bold text-teal-300">{tempName}</span>
+              </div>
+            </div>
+
             <form onSubmit={handleSaveName} className="space-y-4">
               <div>
                 <label className="block text-xs font-mono text-gray-400 mb-1.5">
-                  Display Name
+                  Custom Moniker or Anonymous Handle
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     value={tempName}
                     onChange={(e) => setTempName(e.target.value)}
-                    maxLength={30}
+                    maxLength={35}
                     autoFocus
-                    placeholder="e.g. Aditya"
+                    placeholder="e.g. Silent Voyager #42"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#0e1420] border border-[#26334a] text-white text-sm focus:outline-none focus:border-teal-400"
                   />
                 </div>
               </div>
+
+              {/* Shuffle helper inside modal */}
+              <button
+                type="button"
+                onClick={() => setTempName(shuffleAnonymousName())}
+                className="w-full py-2 rounded-xl bg-[#182132] hover:bg-[#202c42] border border-[#2a3850] text-teal-300 text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span>🎲</span>
+                <span>Shuffle Another Anonymous Name</span>
+              </button>
+
               <div className="flex items-center gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsEditingName(false)}
-                  className="flex-1 py-2 rounded-xl bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 rounded-xl bg-teal-500 text-gray-950 text-xs font-bold hover:bg-teal-400 transition-colors shadow-md shadow-teal-500/20"
+                  className="flex-1 py-2.5 rounded-xl bg-teal-500 text-gray-950 text-xs font-bold hover:bg-teal-400 transition-colors shadow-md shadow-teal-500/20"
                 >
-                  Save Name
+                  Confirm Handle
                 </button>
               </div>
             </form>

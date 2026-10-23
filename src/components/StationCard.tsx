@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { type Station } from '@/lib/stations';
 import { AvatarCluster } from './AvatarCapsule';
+import { transitChime } from '@/lib/chime';
 
 interface StationCardProps {
   station: Station;
@@ -33,10 +34,15 @@ export function StationCard({
     speakingText = `${primarySpeaker || '1 person'} +${moreCount} more`;
   }
 
+  const handleCardClick = () => {
+    transitChime.playArrivalChime(0.08);
+  };
+
   return (
     <Link
       href={`/room/${station.slug}`}
-      className="group relative flex items-center justify-between p-5 sm:p-6 bg-[#131926] hover:bg-[#182132] border border-[#212b3c] hover:border-[#334158] rounded-2xl transition-all duration-200 shadow-lg hover:shadow-2xl hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+      onClick={handleCardClick}
+      className="group relative flex items-center justify-between p-5 sm:p-6 bg-[#131926] hover:bg-[#182234] border border-[#212b3c] hover:border-[#303f56] rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
     >
       {/* Left Column: Details & Real Joined Count */}
       <div className="flex-1 min-w-0 pr-3">
