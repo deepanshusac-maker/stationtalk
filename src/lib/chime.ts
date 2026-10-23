@@ -1,17 +1,19 @@
 /**
- * Web Audio Transit Chime Synthesizer.
+ * Soothing Audio Synthesizer for StationTalk.
  *
- * Plays a warm, gentle two-tone railway arrival chime synthesized
- * dynamically using browser Web Audio API (0 external assets, zero latency).
+ * Generates a warm, gentle acoustic resonance (similar to a wooden kalimba
+ * or soft water droplet) through a low-pass filter with zero harsh highs.
  */
 
-class TransitChime {
+class SoothingSound {
   private ctx: AudioContext | null = null;
 
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
       }
@@ -23,50 +25,46 @@ class TransitChime {
   }
 
   /**
-   * Plays a gentle, nostalgic 2-tone railway platform chime (e.g. C5 -> G4 -> C5).
+   * Plays a calm, gentle acoustic tone (warm low-pass filtered marimba/kalimba drop).
+   * Extremely soft, warm, and relaxing.
    */
-  public playArrivalChime(volume = 0.15) {
+  public playArrivalChime(volume = 0.08) {
     try {
       const ctx = this.getContext();
       if (!ctx) return;
 
       const now = ctx.currentTime;
+
+      // Master low-pass filter to eliminate any sharp or piercing high frequencies
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(850, now);
+      filter.Q.setValueAtTime(1.2, now);
+      filter.connect(ctx.destination);
+
+      // Two warm harmonic frequencies (E4: 329.63Hz, B4: 493.88Hz) — peaceful perfect fifth
       const notes = [
-        { freq: 523.25, time: 0, duration: 0.35 },    // C5
-        { freq: 659.25, time: 0.22, duration: 0.45 }, // E5
-        { freq: 783.99, time: 0.46, duration: 0.7 },  // G5
+        { freq: 329.63, delay: 0, duration: 0.55 },
+        { freq: 493.88, delay: 0.06, duration: 0.65 },
       ];
 
-      notes.forEach(({ freq, time, duration }) => {
+      notes.forEach(({ freq, delay, duration }) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + time);
+        osc.frequency.setValueAtTime(freq, now + delay);
 
-        // Warm harmonic overtone
-        const overtone = ctx.createOscillator();
-        const overtoneGain = ctx.createGain();
-        overtone.type = 'sine';
-        overtone.frequency.setValueAtTime(freq * 2, now + time);
-
-        gain.gain.setValueAtTime(0, now + time);
-        gain.gain.linearRampToValueAtTime(volume, now + time + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + time + duration);
-
-        overtoneGain.gain.setValueAtTime(0, now + time);
-        overtoneGain.gain.linearRampToValueAtTime(volume * 0.25, now + time + 0.02);
-        overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + time + duration * 0.7);
+        // Soft, gentle swell and natural acoustic exponential decay
+        gain.gain.setValueAtTime(0, now + delay);
+        gain.gain.linearRampToValueAtTime(volume, now + delay + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration);
 
         osc.connect(gain);
-        overtone.connect(overtoneGain);
-        gain.connect(ctx.destination);
-        overtoneGain.connect(ctx.destination);
+        gain.connect(filter);
 
-        osc.start(now + time);
-        osc.stop(now + time + duration);
-        overtone.start(now + time);
-        overtone.stop(now + time + duration);
+        osc.start(now + delay);
+        osc.stop(now + delay + duration);
       });
     } catch {
       // AudioContext autoplay restrictions or disabled sound
@@ -74,4 +72,4 @@ class TransitChime {
   }
 }
 
-export const transitChime = new TransitChime();
+export const transitChime = new SoothingSound();
