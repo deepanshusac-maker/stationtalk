@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, Suspense, useEffect } from 'react';
+import { useState, useCallback, Suspense, useEffect, useSyncExternalStore } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -22,6 +22,23 @@ type JoinState =
   | { status: 'joining' }
   | { status: 'connected'; token: string; url: string; identity: string }
   | { status: 'error'; message: string };
+
+function subscribeStorage(callback: () => void) {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+function getStoredNameSnapshot(): string {
+  try {
+    return localStorage.getItem('stationtalk_passenger_name') || '';
+  } catch {
+    return '';
+  }
+}
+
+function getServerNameSnapshot(): string {
+  return '';
+}
 
 export default function RoomPage() {
   return (
@@ -46,16 +63,16 @@ function RoomPageContent() {
   const slug = params.slug;
 
   const [joinState, setJoinState] = useState<JoinState>({ status: 'idle' });
-  const [displayName, setDisplayName] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        return localStorage.getItem('stationtalk_passenger_name') || '';
-      } catch {
-        return '';
-      }
-    }
-    return '';
-  });
+  const [customName, setCustomName] = useState<string | null>(null);
+
+  // useSyncExternalStore prevents SSR hydration mismatch while reading from localStorage
+  const savedName = useSyncExternalStore(
+    subscribeStorage,
+    getStoredNameSnapshot,
+    getServerNameSnapshot
+  );
+
+  const displayName = customName !== null ? customName : savedName;
   const [error, setError] = useState<string | null>(null);
 
   // Validate station synchronously
@@ -69,7 +86,7 @@ function RoomPageContent() {
     const num = Math.floor(100 + Math.random() * 900);
     const prefixes = ['Traveller', 'Commuter', 'Rider', 'Voyager', 'Passenger'];
     const chosen = `${prefixes[Math.floor(Math.random() * prefixes.length)]} #${num}`;
-    setDisplayName(chosen);
+    setCustomName(chosen);
     try {
       localStorage.setItem('stationtalk_passenger_name', chosen);
     } catch {
@@ -223,10 +240,11 @@ function RoomPageContent() {
                     type="text"
                     placeholder="Enter your name..."
                     value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
+                    onChange={(e) => setCustomName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
                     maxLength={50}
                     disabled={joinState.status === 'joining'}
+                    suppressHydrationWarning
                     className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium transition-all"
                   />
                   {displayName.trim() && (
