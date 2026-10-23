@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Suspense } from 'react';
 import { usePresence } from '@/lib/usePresence';
+import { STATIONS } from '@/lib/stations';
 
 function NavbarContent() {
   const pathname = usePathname();
@@ -44,7 +45,7 @@ function NavbarContent() {
           <span className="text-amber-400 font-medium">
             {presence.total > 0
               ? `${presence.total} ${presence.total === 1 ? 'Traveller' : 'Travellers'} Online`
-              : '12 Platforms Open'}
+              : `${STATIONS.length} Platforms Open`}
           </span>
         </div>
 

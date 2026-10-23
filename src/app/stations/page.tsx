@@ -1,4 +1,5 @@
 import { StationGrid } from '@/components/StationGrid';
+import { STATIONS } from '@/lib/stations';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -50,7 +51,7 @@ export default function StationsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800">
             <div className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">Total Platforms</div>
-            <div className="text-lg font-bold text-white font-mono">12 Stations</div>
+            <div className="text-lg font-bold text-white font-mono">{STATIONS.length} Stations</div>
           </div>
           <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800">
             <div className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">Regional Lines</div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, Suspense, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -9,8 +9,10 @@ import {
   useParticipants,
   useConnectionState,
   useLocalParticipant,
+  useRoomContext,
+  useAudioPlayback,
 } from '@livekit/components-react';
-import { ConnectionState } from 'livekit-client';
+import { ConnectionState, RoomEvent } from 'livekit-client';
 import { getStation, type Station, STATIONS } from '@/lib/stations';
 import { ParticipantTile } from '@/components/ParticipantTile';
 import { RoomControls } from '@/components/RoomControls';
@@ -18,7 +20,7 @@ import { RoomControls } from '@/components/RoomControls';
 type JoinState =
   | { status: 'idle' }
   | { status: 'joining' }
-  | { status: 'connected'; token: string; url: string; identity: string; initialAudio: boolean }
+  | { status: 'connected'; token: string; url: string; identity: string }
   | { status: 'error'; message: string };
 
 export default function RoomPage() {
@@ -75,58 +77,53 @@ function RoomPageContent() {
     }
   }, []);
 
-  const handleJoin = useCallback(
-    async (asSpeaker = false) => {
-      const name = displayName.trim();
-      if (!name) {
-        setError('Please enter your name or click Quick Random.');
-        return;
+  const handleJoin = useCallback(async () => {
+    const name = displayName.trim();
+    if (!name) {
+      setError('Please enter your name or click Quick Random.');
+      return;
+    }
+    if (name.length > 50) {
+      setError('Display name must be 50 characters or fewer.');
+      return;
+    }
+
+    setError(null);
+    setJoinState({ status: 'joining' });
+
+    try {
+      localStorage.setItem('stationtalk_passenger_name', name);
+    } catch {
+      // Ignore storage errors
+    }
+
+    try {
+      const res = await fetch('/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stationSlug: slug,
+          displayName: name,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Server returned HTTP ${res.status}`);
       }
-      if (name.length > 50) {
-        setError('Display name must be 50 characters or fewer.');
-        return;
-      }
 
-      setError(null);
-      setJoinState({ status: 'joining' });
-
-      try {
-        localStorage.setItem('stationtalk_passenger_name', name);
-      } catch {
-        // Ignore storage errors
-      }
-
-      try {
-        const res = await fetch('/api/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            stationSlug: slug,
-            displayName: name,
-            asSpeaker,
-          }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `Server error: ${res.status}`);
-        }
-
-        const { token, url, identity } = await res.json();
-        setJoinState({
-          status: 'connected',
-          token,
-          url,
-          identity,
-          initialAudio: asSpeaker,
-        });
-      } catch (err) {
-        const message = (err as Error).message || 'Failed to join room.';
-        setJoinState({ status: 'error', message });
-      }
-    },
-    [slug, displayName]
-  );
+      const { token, url, identity } = await res.json();
+      setJoinState({
+        status: 'connected',
+        token,
+        url,
+        identity,
+      });
+    } catch (err) {
+      const message = (err as Error).message || 'Failed to request room token.';
+      setJoinState({ status: 'error', message });
+    }
+  }, [slug, displayName]);
 
   const handleLeave = useCallback(() => {
     setJoinState({ status: 'idle' });
@@ -227,7 +224,7 @@ function RoomPageContent() {
                     placeholder="Enter your name..."
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleJoin(false)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
                     maxLength={50}
                     disabled={joinState.status === 'joining'}
                     className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium transition-all"
@@ -240,20 +237,29 @@ function RoomPageContent() {
                 </div>
               </div>
 
-              {/* Error Message */}
+              {/* Error Message with Recovery */}
               {(error || joinState.status === 'error') && (
                 <div
-                  className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-mono"
+                  className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-mono flex items-center justify-between gap-3"
                   role="alert"
                 >
-                  ⚠️ {error || (joinState.status === 'error' ? joinState.message : '')}
+                  <span>⚠️ {error || (joinState.status === 'error' ? joinState.message : '')}</span>
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      setJoinState({ status: 'idle' });
+                    }}
+                    className="text-[11px] text-red-300 underline font-bold whitespace-nowrap"
+                  >
+                    Reset
+                  </button>
                 </div>
               )}
 
-              {/* Action Buttons: Join as Listener or Join as Speaker */}
-              <div className="space-y-2.5 pt-2">
+              {/* Action Button: Board Platform as Listener */}
+              <div className="pt-2">
                 <button
-                  onClick={() => handleJoin(false)}
+                  onClick={handleJoin}
                   disabled={joinState.status === 'joining'}
                   className="w-full py-3.5 bg-amber-500 text-gray-950 font-bold text-sm rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-400"
                 >
@@ -267,23 +273,15 @@ function RoomPageContent() {
                     </span>
                   ) : (
                     <>
-                      <span>🎧 Join as Listener</span>
-                      <span className="text-xs text-gray-800 font-mono">(Default)</span>
+                      <span>🎧 Step Onto Platform as Listener</span>
+                      <span className="text-xs">➔</span>
                     </>
                   )}
-                </button>
-
-                <button
-                  onClick={() => handleJoin(true)}
-                  disabled={joinState.status === 'joining'}
-                  className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold text-xs rounded-xl transition-all border border-gray-700 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                >
-                  <span>🎙️ Join Directly with Microphone (Speaker)</span>
                 </button>
               </div>
 
               <p className="text-[11px] text-gray-500 text-center font-mono">
-                Listeners can take the mic anytime inside the room with 1 click.
+                All travellers enter in listen-only mode. You can request to speak on stage at any time.
               </p>
             </div>
           </div>
@@ -298,11 +296,15 @@ function RoomPageContent() {
       serverUrl={joinState.url}
       token={joinState.token}
       connect={true}
-      audio={joinState.initialAudio}
+      audio={false}
       video={false}
       onDisconnected={handleLeave}
       onError={(err) => {
-        console.error('LiveKit room error:', err.message);
+        console.error('LiveKit connection error:', err.message);
+        setJoinState({
+          status: 'error',
+          message: `Connection failed: ${err.message}. Please check your network or credentials.`,
+        });
       }}
     >
       <RoomAudioRenderer />
@@ -310,27 +312,76 @@ function RoomPageContent() {
         station={station}
         platformNumber={platformNumber}
         onLeave={handleLeave}
+        onReconnect={handleJoin}
       />
     </LiveKitRoom>
   );
 }
 
-/** Inner component that uses LiveKit context hooks. */
+/** Inner component that uses LiveKit context hooks and binds real-time events. */
 function RoomViewInner({
   station,
   platformNumber,
   onLeave,
+  onReconnect,
 }: {
   station: Station;
   platformNumber: string;
   onLeave: () => void;
+  onReconnect: () => void;
 }) {
+  const room = useRoomContext();
   const participants = useParticipants();
   const connectionState = useConnectionState();
   const { localParticipant } = useLocalParticipant();
+  const { canPlayAudio, startAudio } = useAudioPlayback();
+
   const [promoting, setPromoting] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [, setEventTick] = useState(0);
+
+  // Subscribe to LiveKit events to ensure participant lists & counts update on all state changes
+  useEffect(() => {
+    if (!room) return;
+    const handleRoomEvent = () => setEventTick((prev) => prev + 1);
+
+    room.on(RoomEvent.ParticipantConnected, handleRoomEvent);
+    room.on(RoomEvent.ParticipantDisconnected, handleRoomEvent);
+    room.on(RoomEvent.ParticipantPermissionsChanged, handleRoomEvent);
+    room.on(RoomEvent.TrackPublished, handleRoomEvent);
+    room.on(RoomEvent.TrackUnpublished, handleRoomEvent);
+    room.on(RoomEvent.TrackSubscribed, handleRoomEvent);
+    room.on(RoomEvent.TrackUnsubscribed, handleRoomEvent);
+    room.on(RoomEvent.TrackMuted, handleRoomEvent);
+    room.on(RoomEvent.TrackUnmuted, handleRoomEvent);
+    room.on(RoomEvent.LocalTrackPublished, handleRoomEvent);
+    room.on(RoomEvent.LocalTrackUnpublished, handleRoomEvent);
+
+    return () => {
+      room.off(RoomEvent.ParticipantConnected, handleRoomEvent);
+      room.off(RoomEvent.ParticipantDisconnected, handleRoomEvent);
+      room.off(RoomEvent.ParticipantPermissionsChanged, handleRoomEvent);
+      room.off(RoomEvent.TrackPublished, handleRoomEvent);
+      room.off(RoomEvent.TrackUnpublished, handleRoomEvent);
+      room.off(RoomEvent.TrackSubscribed, handleRoomEvent);
+      room.off(RoomEvent.TrackUnsubscribed, handleRoomEvent);
+      room.off(RoomEvent.TrackMuted, handleRoomEvent);
+      room.off(RoomEvent.TrackUnmuted, handleRoomEvent);
+      room.off(RoomEvent.LocalTrackPublished, handleRoomEvent);
+      room.off(RoomEvent.LocalTrackUnpublished, handleRoomEvent);
+    };
+  }, [room]);
+
+  // Clean up media tracks and disconnect if component unmounts while connected
+  useEffect(() => {
+    return () => {
+      if (localParticipant?.isMicrophoneEnabled) {
+        localParticipant.setMicrophoneEnabled(false).catch(() => {});
+      }
+      room?.disconnect();
+    };
+  }, [localParticipant, room]);
 
   const speakers = participants.filter((p) => p.permissions?.canPublish);
   const listeners = participants.filter((p) => !p.permissions?.canPublish);
@@ -345,7 +396,7 @@ function RoomViewInner({
     }
   }, []);
 
-  // Functional Promotion: Take the Microphone / Speak
+  // Server-authorized promotion & demotion
   const handleToggleSpeak = useCallback(async () => {
     setPromoting(true);
     setMicError(null);
@@ -353,7 +404,7 @@ function RoomViewInner({
     try {
       const willPublish = !isCanPublish;
 
-      // 1. Update server permission via /api/promote
+      // 1. Authorize on server via /api/promote (enforces 7-speaker cap)
       const res = await fetch('/api/promote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -366,10 +417,10 @@ function RoomViewInner({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to update permissions on server.');
+        throw new Error(data.error || `Server promotion failed with HTTP ${res.status}`);
       }
 
-      // 2. If promoting to speaker, enable microphone
+      // 2. Control actual microphone hardware track
       if (willPublish) {
         await localParticipant.setMicrophoneEnabled(true);
       } else {
@@ -377,19 +428,41 @@ function RoomViewInner({
       }
     } catch (err) {
       const msg = (err as Error).message || 'Unknown error';
-      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied')) {
-        setMicError('Microphone permission blocked. Please click the lock or camera icon in your browser URL bar to allow microphone access.');
-      } else if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('unavailable')) {
-        setMicError('No microphone detected. Please plug in a microphone or headset.');
+      if (
+        msg.toLowerCase().includes('permission') ||
+        msg.toLowerCase().includes('denied') ||
+        msg.toLowerCase().includes('notallowed')
+      ) {
+        setMicError('Microphone permission blocked. Please click the lock or camera icon in your address bar to allow microphone access, then try again.');
+      } else if (
+        msg.toLowerCase().includes('not found') ||
+        msg.toLowerCase().includes('unavailable') ||
+        msg.toLowerCase().includes('device')
+      ) {
+        setMicError('No microphone detected. Please plug in a microphone or headset and try again.');
       } else {
-        setMicError(`Microphone error: ${msg}`);
+        setMicError(msg);
       }
     } finally {
       setPromoting(false);
     }
   }, [isCanPublish, localParticipant, station.slug]);
 
-  // Connection state UI
+  // Clean room disconnection and resource release
+  const handleLeaveRoom = useCallback(async () => {
+    try {
+      if (localParticipant?.isMicrophoneEnabled) {
+        await localParticipant.setMicrophoneEnabled(false);
+      }
+      await room?.disconnect();
+    } catch (err) {
+      console.warn('Error during room leave cleanup:', err);
+    } finally {
+      onLeave();
+    }
+  }, [localParticipant, room, onLeave]);
+
+  // Connection State: Connecting
   if (connectionState === ConnectionState.Connecting) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-concourse-pattern">
@@ -405,6 +478,7 @@ function RoomViewInner({
     );
   }
 
+  // Connection State: Reconnecting
   if (connectionState === ConnectionState.Reconnecting) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-concourse-pattern">
@@ -417,6 +491,7 @@ function RoomViewInner({
     );
   }
 
+  // Connection State: Disconnected (Recoverable UI)
   if (connectionState === ConnectionState.Disconnected) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-concourse-pattern">
@@ -426,12 +501,20 @@ function RoomViewInner({
           <p className="text-gray-400 text-xs mb-6">
             You have left or been disconnected from {station.name}.
           </p>
-          <button
-            onClick={onLeave}
-            className="w-full py-3 bg-amber-500 text-gray-950 font-bold rounded-xl hover:bg-amber-400 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
-          >
-            ← Return to Concourse
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={onReconnect}
+              className="flex-1 py-3 bg-amber-500 text-gray-950 font-bold rounded-xl hover:bg-amber-400 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
+            >
+              🔄 Reconnect
+            </button>
+            <button
+              onClick={onLeave}
+              className="flex-1 py-3 bg-gray-800 text-gray-300 font-semibold rounded-xl hover:bg-gray-700 transition-all border border-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            >
+              ← Concourse
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -491,6 +574,29 @@ function RoomViewInner({
 
       {/* Main Room Stage */}
       <main className="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
+        {/* Browser Autoplay Policy Warning */}
+        {!canPlayAudio && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">🔊</span>
+              <div>
+                <div className="text-xs font-bold text-amber-300 font-mono">
+                  Room Audio Muted by Browser Autoplay Policy
+                </div>
+                <div className="text-[11px] text-gray-400">
+                  Your browser requires a click to begin playing remote audio.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => startAudio()}
+              className="px-4 py-2 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap"
+            >
+              Unmute Room Audio
+            </button>
+          </div>
+        )}
+
         {/* Stage Speakers Section */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-800">
@@ -499,7 +605,7 @@ function RoomViewInner({
                 🎙️ Stage Speakers
               </span>
               <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                {speakers.length} Active
+                {speakers.length} / 7 Max
               </span>
             </div>
             <span className="text-[11px] font-mono text-gray-500">
@@ -561,7 +667,8 @@ function RoomViewInner({
             <span>⚠️ {micError}</span>
             <button
               onClick={() => setMicError(null)}
-              className="text-red-400 hover:text-white font-bold"
+              className="text-red-400 hover:text-white font-bold text-sm px-2 py-0.5 rounded"
+              aria-label="Dismiss error"
             >
               ✕
             </button>
@@ -607,7 +714,7 @@ function RoomViewInner({
                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 disabled:opacity-50 transition-all shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400"
                 >
                   {promoting ? (
-                    <span>Activating Mic...</span>
+                    <span>Requesting Stage...</span>
                   ) : (
                     <>
                       <span>🎙️ Take the Mic (Speak)</span>
@@ -619,8 +726,11 @@ function RoomViewInner({
             </div>
           </div>
 
-          {/* Standard Room Controls: Mute & Exit */}
-          <RoomControls onLeave={onLeave} onRequestSpeak={handleToggleSpeak} />
+          {/* Standard Room Controls: Mute & Leave */}
+          <RoomControls
+            onLeave={handleLeaveRoom}
+            onRequestSpeak={isCanPublish ? undefined : handleToggleSpeak}
+          />
         </div>
       </footer>
     </div>

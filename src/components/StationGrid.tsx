@@ -81,7 +81,7 @@ export function StationGrid({ participantCounts }: StationGridProps) {
             onClick={handleReset}
             className="px-5 py-2.5 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 transition-all shadow-md shadow-amber-500/20"
           >
-            Show All 12 Stations
+            Show All {STATIONS.length} Stations
           </button>
         </div>
       ) : (

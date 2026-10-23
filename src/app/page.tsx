@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { STATIONS } from '@/lib/stations';
 
 const DEPARTURES = [
   { line: 'CENTRAL LINE', platform: 'PF 01', station: 'Delhi Central', status: 'BROADCASTING', time: 'LIVE' },
@@ -113,7 +114,7 @@ export default function ArrivalScreen() {
             </div>
             <div className="text-left">
               <div className="text-xs font-semibold text-white">Live Voice Concourse Ready</div>
-              <div className="text-[11px] text-gray-400">12 Verified Stations • 5 Regional Lines</div>
+              <div className="text-[11px] text-gray-400">{STATIONS.length} Verified Stations • 5 Regional Lines</div>
             </div>
           </div>
           <Link
