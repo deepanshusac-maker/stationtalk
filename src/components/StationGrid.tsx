@@ -14,6 +14,7 @@ interface StationGridProps {
 export function StationGrid({ participantCounts }: StationGridProps) {
   const presence = usePresence();
   const counts = participantCounts ?? presence.counts;
+  const participants = presence.participants;
 
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,7 +69,8 @@ export function StationGrid({ participantCounts }: StationGridProps) {
             <StationCard
               key={station.slug}
               station={station}
-              participantCount={counts[station.slug] ?? null}
+              participantCount={counts[station.slug] ?? 0}
+              participantNames={participants[station.slug] ?? []}
             />
           ))}
         </div>

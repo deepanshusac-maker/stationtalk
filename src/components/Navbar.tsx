@@ -57,8 +57,9 @@ function NavbarContent() {
     [tempName]
   );
 
-  // Approximate online count calculation inspired by screenshot
-  const onlineCount = presence.total > 0 ? `${(presence.total * 120 + 80).toLocaleString()}` : '5.18k';
+  // Real online count directly from LiveKit Cloud SFU
+  const realOnlineTotal = presence.total;
+  const onlineText = realOnlineTotal === 1 ? '1 online' : `${realOnlineTotal} online`;
 
   return (
     <>
@@ -109,13 +110,19 @@ function NavbarContent() {
           {/* Right: Live Counter & Navigation */}
           <div className="flex items-center gap-3">
             {/* Live Indicator */}
-            <div className="flex items-center gap-1.5 text-xs font-mono text-gray-300">
+            <div className="flex items-center gap-1.5 text-xs font-mono">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                {realOnlineTotal > 0 && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span
+                  className={`relative inline-flex rounded-full h-2 w-2 ${
+                    realOnlineTotal > 0 ? 'bg-emerald-400' : 'bg-gray-500'
+                  }`}
+                />
               </span>
-              <span className="text-gray-400 font-medium">
-                {onlineCount} online
+              <span className={realOnlineTotal > 0 ? 'text-emerald-400 font-medium' : 'text-gray-400 font-medium'}>
+                {onlineText}
               </span>
             </div>
 

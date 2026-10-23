@@ -13,8 +13,11 @@ function getEnvOrThrow(key: string): string {
 /**
  * GET /api/presence
  *
- * Fetches real-time room occupancy from LiveKit Cloud SFU.
- * Returns a map of stationSlug -> participantCount for registered stations only.
+ * Fetches real-time room occupancy and active participants from LiveKit Cloud SFU.
+ * Returns:
+ * - counts: map of stationSlug -> real participant count
+ * - participants: map of stationSlug -> real participant names
+ * - total: real total active participants across all rooms
  */
 export async function GET(request: Request) {
   // Accessing request ensures Next.js treats this handler as dynamic per-request
@@ -22,7 +25,7 @@ export async function GET(request: Request) {
   try {
     const rawUrl = process.env.LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_URL;
     if (!rawUrl) {
-      return NextResponse.json({ counts: {}, total: 0 }, { status: 200 });
+      return NextResponse.json({ counts: {}, participants: {}, total: 0 }, { status: 200 });
     }
 
     const httpUrl = rawUrl.replace('wss://', 'https://').replace('ws://', 'http://');
@@ -34,17 +37,27 @@ export async function GET(request: Request) {
 
     const validSlugs = new Set(getValidSlugs());
     const counts: Record<string, number> = {};
+    const participants: Record<string, string[]> = {};
     let total = 0;
 
     for (const room of rooms) {
-      if (validSlugs.has(room.name)) {
+      if (validSlugs.has(room.name) && room.numParticipants > 0) {
         counts[room.name] = room.numParticipants;
         total += room.numParticipants;
+
+        try {
+          const roomParts = await svc.listParticipants(room.name);
+          participants[room.name] = roomParts
+            .map((p) => p.name || 'Traveller')
+            .filter(Boolean);
+        } catch {
+          participants[room.name] = [];
+        }
       }
     }
 
     return NextResponse.json(
-      { counts, total },
+      { counts, participants, total },
       {
         status: 200,
         headers: {
@@ -53,8 +66,7 @@ export async function GET(request: Request) {
       }
     );
   } catch (error) {
-    // If credentials are not configured or request fails, return empty counts gracefully
     console.error('Failed to fetch room presence from LiveKit:', (error as Error).message);
-    return NextResponse.json({ counts: {}, total: 0 }, { status: 200 });
+    return NextResponse.json({ counts: {}, participants: {}, total: 0 }, { status: 200 });
   }
 }

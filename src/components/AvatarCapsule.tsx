@@ -44,8 +44,8 @@ export function AvatarCapsule({
     lg: 'w-9 h-11 text-sm rounded-[16px]',
   }[size];
 
-  // If showEyes is true or name is short/symbolic, render cute double-dot eyes
-  const hasEyes = showEyes || (name.startsWith('Rider-') && hash % 3 === 0);
+  // If showEyes is true or name starts with Rider/Guest, render cute double-dot eyes
+  const hasEyes = showEyes || (name.toLowerCase().startsWith('rider') && hash % 2 === 0);
   const initial = name.replace(/^(user-|rider-)/i, '').trim()[0]?.toUpperCase() || '?';
 
   return (
@@ -80,16 +80,19 @@ export function AvatarCluster({ names, totalCount, size = 'md' }: AvatarClusterP
 
   if (activeCount === 0) {
     return (
-      <div className="w-16 h-12 flex items-center justify-center opacity-30">
-        <div className="w-7 h-8 rounded-[12px] border border-dashed border-gray-600 flex items-center justify-center text-[10px] text-gray-500">
-          ●
+      <div className="w-16 h-12 flex items-center justify-end pr-2">
+        <div
+          className="w-7 h-8.5 rounded-[12px] border border-dashed border-[#293448] flex flex-col items-center justify-center text-gray-500 text-xs font-semibold group-hover:border-teal-400/50 group-hover:text-teal-300 transition-colors"
+          title="Empty room — tap to join"
+        >
+          <span>+</span>
         </div>
       </div>
     );
   }
 
-  // Pick up to 4 names to display
-  const displayNames = names.length > 0 ? names.slice(0, 4) : ['Guest'];
+  // Display actual participant names
+  const displayNames = names.length > 0 ? names.slice(0, 4) : Array.from({ length: Math.min(activeCount, 4) }, (_, i) => `Traveller ${i + 1}`);
   const remaining = Math.max(0, activeCount - displayNames.length);
 
   // Layout cluster configurations based on number of visible avatars
