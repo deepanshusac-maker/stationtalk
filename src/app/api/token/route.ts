@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   // --- Parse and validate request body ---
-  let body: { stationSlug?: string; displayName?: string };
+  let body: { stationSlug?: string; displayName?: string; asSpeaker?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { stationSlug, displayName } = body;
+  const { stationSlug, displayName, asSpeaker } = body;
 
   if (!stationSlug || typeof stationSlug !== 'string') {
     return NextResponse.json(
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       roomName: normalizedSlug,
       participantIdentity: identity,
       participantName: trimmedName,
-      canPublish: false, // Default: listener-only
+      canPublish: asSpeaker === true, // Default: listener-only, or speaker if requested
     });
 
     const url = getLiveKitUrl();

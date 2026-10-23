@@ -18,7 +18,7 @@ import { RoomControls } from '@/components/RoomControls';
 type JoinState =
   | { status: 'idle' }
   | { status: 'joining' }
-  | { status: 'connected'; token: string; url: string; identity: string }
+  | { status: 'connected'; token: string; url: string; identity: string; initialAudio: boolean }
   | { status: 'error'; message: string };
 
 export default function RoomPage() {
@@ -56,6 +56,13 @@ function RoomPageContent() {
   });
   const [error, setError] = useState<string | null>(null);
 
+  // Validate station synchronously
+  const station = getStation(slug) ?? null;
+  const notFound = station === null;
+
+  const stationIndex = station ? STATIONS.findIndex((s) => s.slug === station.slug) : 0;
+  const platformNumber = String(stationIndex + 1).padStart(2, '0');
+
   const handleRandomName = useCallback(() => {
     const num = Math.floor(100 + Math.random() * 900);
     const prefixes = ['Traveller', 'Commuter', 'Rider', 'Voyager', 'Passenger'];
@@ -68,56 +75,61 @@ function RoomPageContent() {
     }
   }, []);
 
-  // Validate station synchronously
-  const station = getStation(slug) ?? null;
-  const notFound = station === null;
-
-  const stationIndex = station ? STATIONS.findIndex((s) => s.slug === station.slug) : 0;
-  const platformNumber = String(stationIndex + 1).padStart(2, '0');
-
-  const handleJoin = useCallback(async () => {
-    const name = displayName.trim();
-    if (!name) {
-      setError('Please enter your passenger / display name.');
-      return;
-    }
-    if (name.length > 50) {
-      setError('Display name must be 50 characters or fewer.');
-      return;
-    }
-
-    setError(null);
-    setJoinState({ status: 'joining' });
-
-    try {
-      localStorage.setItem('stationtalk_passenger_name', name);
-    } catch {
-      // Ignore storage errors
-    }
-
-    try {
-      const res = await fetch('/api/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stationSlug: slug, displayName: name }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Server error: ${res.status}`);
+  const handleJoin = useCallback(
+    async (asSpeaker = false) => {
+      const name = displayName.trim();
+      if (!name) {
+        setError('Please enter your name or click Quick Random.');
+        return;
+      }
+      if (name.length > 50) {
+        setError('Display name must be 50 characters or fewer.');
+        return;
       }
 
-      const { token, url, identity } = await res.json();
-      setJoinState({ status: 'connected', token, url, identity });
-    } catch (err) {
-      const message = (err as Error).message || 'Failed to join room.';
-      setJoinState({ status: 'error', message });
-    }
-  }, [slug, displayName]);
+      setError(null);
+      setJoinState({ status: 'joining' });
+
+      try {
+        localStorage.setItem('stationtalk_passenger_name', name);
+      } catch {
+        // Ignore storage errors
+      }
+
+      try {
+        const res = await fetch('/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            stationSlug: slug,
+            displayName: name,
+            asSpeaker,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Server error: ${res.status}`);
+        }
+
+        const { token, url, identity } = await res.json();
+        setJoinState({
+          status: 'connected',
+          token,
+          url,
+          identity,
+          initialAudio: asSpeaker,
+        });
+      } catch (err) {
+        const message = (err as Error).message || 'Failed to join room.';
+        setJoinState({ status: 'error', message });
+      }
+    },
+    [slug, displayName]
+  );
 
   const handleLeave = useCallback(() => {
     setJoinState({ status: 'idle' });
-    setDisplayName('');
     setError(null);
   }, []);
 
@@ -131,7 +143,7 @@ function RoomPageContent() {
       <div className="flex-1 flex items-center justify-center p-4 min-h-[70vh] bg-concourse-pattern">
         <div className="text-center max-w-md p-8 rounded-2xl bg-gray-900 border border-gray-800 shadow-2xl">
           <div className="text-5xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold mb-2">Station Platform Not Found</h1>
+          <h1 className="text-2xl font-bold mb-2">Platform Not Found</h1>
           <p className="text-gray-400 text-sm mb-6">
             The platform &ldquo;{slug}&rdquo; is not part of the active railway registry.
           </p>
@@ -139,7 +151,7 @@ function RoomPageContent() {
             onClick={handleBackToConcourse}
             className="w-full py-3 bg-amber-500 text-gray-950 font-bold rounded-xl hover:bg-amber-400 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
           >
-            ← Return to Concourse Directory
+            ← Return to Concourse
           </button>
         </div>
       </div>
@@ -154,7 +166,7 @@ function RoomPageContent() {
     );
   }
 
-  // --- Join Form: Boarding Pass Modal ---
+  // --- Join Form: Passenger Boarding Pass ---
   if (joinState.status === 'idle' || joinState.status === 'joining' || joinState.status === 'error') {
     return (
       <div className="flex-1 flex items-center justify-center p-4 bg-concourse-pattern py-12">
@@ -165,7 +177,7 @@ function RoomPageContent() {
               onClick={handleBackToConcourse}
               className="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-400 rounded px-1.5 py-0.5"
             >
-              <span>← Back to Concourse Directory</span>
+              <span>← Back to Concourse</span>
             </button>
             <span className="text-xs font-mono text-gray-500">
               PF {platformNumber} • {station.region.toUpperCase()} LINE
@@ -174,14 +186,12 @@ function RoomPageContent() {
 
           {/* Passenger Boarding Pass Card */}
           <div className="bg-gray-900/90 backdrop-blur-md border border-gray-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-            {/* Top Accent Strip */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-amber-300 to-amber-600" />
 
-            {/* Boarding Pass Header */}
             <div className="flex items-start justify-between border-b border-gray-800/80 pb-5 mb-6">
               <div>
                 <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                  PLATFORM BOARDING PASS
+                  PLATFORM BOARDING
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
                   {station.name}
@@ -191,16 +201,15 @@ function RoomPageContent() {
 
               <div className="text-right font-mono">
                 <span className="text-2xl font-black text-amber-400">PF {platformNumber}</span>
-                <span className="block text-[10px] text-gray-500 uppercase">{station.region} Sector</span>
+                <span className="block text-[10px] text-gray-500 uppercase">{station.region} Line</span>
               </div>
             </div>
 
-            {/* Input Form */}
             <div className="space-y-5">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label htmlFor="display-name" className="text-xs font-mono text-gray-300">
-                    Your Passenger / Display Name
+                    Your Name
                   </label>
                   <button
                     type="button"
@@ -215,10 +224,10 @@ function RoomPageContent() {
                   <input
                     id="display-name"
                     type="text"
-                    placeholder="Enter your name (e.g. Maya)..."
+                    placeholder="Enter your name..."
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleJoin(false)}
                     maxLength={50}
                     disabled={joinState.status === 'joining'}
                     className="w-full px-4 py-3 bg-gray-950 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium transition-all"
@@ -241,37 +250,41 @@ function RoomPageContent() {
                 </div>
               )}
 
-              {/* Join Button */}
-              <button
-                onClick={handleJoin}
-                disabled={joinState.status === 'joining'}
-                className="w-full py-3.5 bg-amber-500 text-gray-950 font-bold text-sm rounded-xl hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-amber-400/50"
-              >
-                {joinState.status === 'joining' ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    <span>Authenticating with SFU Cloud...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>🎧 Step Onto Platform as Listener</span>
-                    <span className="text-xs">➔</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons: Join as Listener or Join as Speaker */}
+              <div className="space-y-2.5 pt-2">
+                <button
+                  onClick={() => handleJoin(false)}
+                  disabled={joinState.status === 'joining'}
+                  className="w-full py-3.5 bg-amber-500 text-gray-950 font-bold text-sm rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  {joinState.status === 'joining' ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Connecting to Platform...
+                    </span>
+                  ) : (
+                    <>
+                      <span>🎧 Join as Listener</span>
+                      <span className="text-xs text-gray-800 font-mono">(Default)</span>
+                    </>
+                  )}
+                </button>
 
-              {/* Permissions Explainer */}
-              <div className="p-3 rounded-xl bg-gray-950/60 border border-gray-800/80 text-[11px] text-gray-400 space-y-1">
-                <div className="flex items-center gap-2 text-gray-300 font-semibold">
-                  <span>🔒 Listener-First Experience</span>
-                </div>
-                <p>
-                  You will join in pure listen-only mode (`canPublish: false`). When inside, you can request to speak or promote to speaker in dev mode.
-                </p>
+                <button
+                  onClick={() => handleJoin(true)}
+                  disabled={joinState.status === 'joining'}
+                  className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold text-xs rounded-xl transition-all border border-gray-700 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  <span>🎙️ Join Directly with Microphone (Speaker)</span>
+                </button>
               </div>
+
+              <p className="text-[11px] text-gray-500 text-center font-mono">
+                Listeners can take the mic anytime inside the room with 1 click.
+              </p>
             </div>
           </div>
         </div>
@@ -285,7 +298,7 @@ function RoomPageContent() {
       serverUrl={joinState.url}
       token={joinState.token}
       connect={true}
-      audio={false}
+      audio={joinState.initialAudio}
       video={false}
       onDisconnected={handleLeave}
       onError={(err) => {
@@ -315,12 +328,13 @@ function RoomViewInner({
   const participants = useParticipants();
   const connectionState = useConnectionState();
   const { localParticipant } = useLocalParticipant();
-  const [devPromoting, setDevPromoting] = useState(false);
+  const [promoting, setPromoting] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const speakers = participants.filter((p) => p.permissions?.canPublish);
   const listeners = participants.filter((p) => !p.permissions?.canPublish);
+  const isCanPublish = localParticipant.permissions?.canPublish ?? false;
 
   // Copy Room Link to Clipboard
   const handleCopyLink = useCallback(() => {
@@ -331,25 +345,49 @@ function RoomViewInner({
     }
   }, []);
 
-  // Dev-only speaker promotion
-  const handleDevPromote = useCallback(async () => {
-    setDevPromoting(true);
+  // Functional Promotion: Take the Microphone / Speak
+  const handleToggleSpeak = useCallback(async () => {
+    setPromoting(true);
     setMicError(null);
+
     try {
-      await localParticipant.setMicrophoneEnabled(true);
+      const willPublish = !isCanPublish;
+
+      // 1. Update server permission via /api/promote
+      const res = await fetch('/api/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomName: station.slug,
+          identity: localParticipant.identity,
+          canPublish: willPublish,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update permissions on server.');
+      }
+
+      // 2. If promoting to speaker, enable microphone
+      if (willPublish) {
+        await localParticipant.setMicrophoneEnabled(true);
+      } else {
+        await localParticipant.setMicrophoneEnabled(false);
+      }
     } catch (err) {
       const msg = (err as Error).message || 'Unknown error';
       if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied')) {
-        setMicError('Microphone permission denied. Please allow microphone access in your browser settings.');
+        setMicError('Microphone permission blocked. Please click the lock or camera icon in your browser URL bar to allow microphone access.');
       } else if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('unavailable')) {
-        setMicError('No microphone device found. Please connect a microphone.');
+        setMicError('No microphone detected. Please plug in a microphone or headset.');
       } else {
-        setMicError(`Failed to enable microphone: ${msg}`);
+        setMicError(`Microphone error: ${msg}`);
       }
     } finally {
-      setDevPromoting(false);
+      setPromoting(false);
     }
-  }, [localParticipant]);
+  }, [isCanPublish, localParticipant, station.slug]);
 
   // Connection state UI
   if (connectionState === ConnectionState.Connecting) {
@@ -398,8 +436,6 @@ function RoomViewInner({
       </div>
     );
   }
-
-  const isCanPublish = localParticipant.permissions?.canPublish ?? false;
 
   return (
     <div className="flex-1 flex flex-col justify-between bg-concourse-pattern">
@@ -467,7 +503,7 @@ function RoomViewInner({
               </span>
             </div>
             <span className="text-[11px] font-mono text-gray-500">
-              Broadcasting via WebRTC
+              Broadcasting Live via WebRTC
             </span>
           </div>
 
@@ -480,9 +516,9 @@ function RoomViewInner({
           ) : (
             <div className="p-8 rounded-2xl bg-gray-900/30 border border-dashed border-gray-800 text-center">
               <div className="text-3xl mb-2">🎙️</div>
-              <p className="text-sm text-gray-400 font-medium">Stage is open.</p>
+              <p className="text-sm text-gray-400 font-medium">The stage is currently open.</p>
               <p className="text-xs text-gray-500 mt-1">
-                No active speakers on the microphone. Use dev mode below to take the stage.
+                Nobody is on the microphone right now. Click below to take the stage and speak!
               </p>
             </div>
           )}
@@ -500,7 +536,7 @@ function RoomViewInner({
               </span>
             </div>
             <span className="text-[11px] font-mono text-gray-500">
-              Listener-only mode
+              Listen-only travellers
             </span>
           </div>
 
@@ -511,8 +547,8 @@ function RoomViewInner({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500 font-mono text-xs">
-              All room participants are currently on stage.
+            <div className="text-center py-6 text-gray-500 font-mono text-xs">
+              No other listeners in the station right now.
             </div>
           )}
         </div>
@@ -521,38 +557,70 @@ function RoomViewInner({
       {/* Mic error notice */}
       {micError && (
         <div className="max-w-5xl mx-auto px-4 mb-3 w-full">
-          <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-mono">
-            ⚠️ {micError}
+          <div className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 text-xs font-mono flex items-center justify-between gap-3">
+            <span>⚠️ {micError}</span>
+            <button
+              onClick={() => setMicError(null)}
+              className="text-red-400 hover:text-white font-bold"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
 
-      {/* Sticky Bottom Room Controls */}
-      <footer className="border-t border-gray-800/80 bg-gray-950/90 backdrop-blur-md py-3 sticky bottom-0 z-40">
-        <div className="max-w-5xl mx-auto px-4">
-          <RoomControls onLeave={onLeave} />
-
-          {/* Dev-only promotion card */}
-          {!isCanPublish && (
-            <div className="mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+      {/* Sticky Bottom Controls */}
+      <footer className="border-t border-gray-800/80 bg-gray-950/90 backdrop-blur-md py-4 sticky bottom-0 z-40">
+        <div className="max-w-5xl mx-auto px-4 flex flex-col items-center gap-3">
+          {/* Main Primary Microphone / Speak Action */}
+          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-gray-900/80 border border-gray-800">
+            <div className="flex items-center gap-2.5 text-center sm:text-left">
+              <span className="text-lg">
+                {isCanPublish ? '🎙️' : '🎧'}
+              </span>
               <div>
-                <div className="text-xs font-bold text-amber-300 font-mono">
-                  ⚠️ [DEV MODE] Test Microphone Promotion
+                <div className="text-xs font-bold text-white">
+                  {isCanPublish ? 'You are a Speaker on Stage' : 'You are currently Listening'}
                 </div>
                 <div className="text-[11px] text-gray-400">
-                  Client-side self promotion for Phase 1 testing. Bypasses moderator request queue.
+                  {isCanPublish
+                    ? 'Your microphone is broadcast to all participants in this station.'
+                    : 'Click "Take the Mic" to enable your microphone and start speaking.'}
                 </div>
               </div>
-
-              <button
-                onClick={handleDevPromote}
-                disabled={devPromoting}
-                className="px-4 py-2 rounded-lg bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 disabled:opacity-50 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-amber-400"
-              >
-                {devPromoting ? 'Requesting Mic...' : 'Take the Stage (Enable Mic)'}
-              </button>
             </div>
-          )}
+
+            {/* Toggle Mic / Step Down */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {isCanPublish ? (
+                <button
+                  onClick={handleToggleSpeak}
+                  disabled={promoting}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium border border-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  {promoting ? 'Updating...' : 'Step Down to Listener'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleToggleSpeak}
+                  disabled={promoting}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs hover:bg-amber-400 disabled:opacity-50 transition-all shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  {promoting ? (
+                    <span>Activating Mic...</span>
+                  ) : (
+                    <>
+                      <span>🎙️ Take the Mic (Speak)</span>
+                      <span>➔</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Standard Room Controls: Mute & Exit */}
+          <RoomControls onLeave={onLeave} />
         </div>
       </footer>
     </div>
