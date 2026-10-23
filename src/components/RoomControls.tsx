@@ -5,9 +5,10 @@ import { useLocalParticipant } from '@livekit/components-react';
 
 interface RoomControlsProps {
   onLeave: () => void;
+  onRequestSpeak?: () => void;
 }
 
-export function RoomControls({ onLeave }: RoomControlsProps) {
+export function RoomControls({ onLeave, onRequestSpeak }: RoomControlsProps) {
   const { localParticipant } = useLocalParticipant();
   const canPublish = localParticipant.permissions?.canPublish ?? false;
   const isMuted = !localParticipant.isMicrophoneEnabled;
@@ -17,7 +18,7 @@ export function RoomControls({ onLeave }: RoomControlsProps) {
     try {
       await localParticipant.setMicrophoneEnabled(isMuted);
     } catch (err) {
-      console.error('Failed to toggle microphone:', (err as Error).message);
+      console.error('Failed to toggle microphone track:', (err as Error).message);
     }
   }, [localParticipant, canPublish, isMuted]);
 
@@ -36,13 +37,18 @@ export function RoomControls({ onLeave }: RoomControlsProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleMute, canPublish]);
 
-  const requestToSpeak = useCallback(async () => {
-    alert(
-      '🎤 Request to Speak\n\n' +
-      'In production, this would notify the station master / room moderator.\n' +
-      'For testing right now, click the yellow "[DEV MODE] Promote to Speaker" button below to enable your mic!'
-    );
-  }, []);
+  const handleDisconnect = useCallback(async () => {
+    try {
+      // Explicitly disable and unpublish microphone to release browser media resources
+      if (localParticipant.isMicrophoneEnabled) {
+        await localParticipant.setMicrophoneEnabled(false);
+      }
+    } catch (err) {
+      console.warn('Error releasing microphone resources on leave:', (err as Error).message);
+    } finally {
+      onLeave();
+    }
+  }, [localParticipant, onLeave]);
 
   return (
     <div className="flex items-center justify-center gap-4 sm:gap-6 p-4">
@@ -52,7 +58,7 @@ export function RoomControls({ onLeave }: RoomControlsProps) {
           <button
             onClick={toggleMute}
             aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
-            title={isMuted ? 'Unmute (Press M)' : 'Mute (Press M)'}
+            title={isMuted ? 'Unmute microphone (Press M)' : 'Mute microphone (Press M)'}
             className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400 ${
               isMuted
                 ? 'bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25'
@@ -76,12 +82,12 @@ export function RoomControls({ onLeave }: RoomControlsProps) {
       )}
 
       {/* Request to speak (listeners only) */}
-      {!canPublish && (
+      {!canPublish && onRequestSpeak && (
         <div className="flex flex-col items-center gap-1">
           <button
-            onClick={requestToSpeak}
-            aria-label="Request to speak"
-            title="Request microphone from host"
+            onClick={onRequestSpeak}
+            aria-label="Request microphone"
+            title="Request microphone to speak on stage"
             className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-amber-400"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,16 +101,16 @@ export function RoomControls({ onLeave }: RoomControlsProps) {
       {/* Leave room */}
       <div className="flex flex-col items-center gap-1">
         <button
-          onClick={onLeave}
+          onClick={handleDisconnect}
           aria-label="Leave station room"
-          title="Exit to station concourse"
+          title="Disconnect from audio room and release microphone"
           className="p-3.5 sm:p-4 rounded-2xl bg-red-600/90 text-white hover:bg-red-500 transition-all focus:outline-none focus:ring-2 focus:ring-red-400 shadow-md shadow-red-600/20"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
         </button>
-        <span className="text-[10px] font-mono text-gray-400">Exit Room</span>
+        <span className="text-[10px] font-mono text-gray-400">Leave Room</span>
       </div>
     </div>
   );

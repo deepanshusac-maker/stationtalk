@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const DEPARTURES = [
-  { line: 'CENTRAL LINE', platform: 'PF 01', station: 'Grand Central', status: 'BROADCASTING', time: 'LIVE' },
-  { line: 'NORTHERN LIGHTS', platform: 'PF 04', station: 'Northern Lights', status: 'OPEN MIC', time: 'LIVE' },
-  { line: 'SOUTH COAST', platform: 'PF 06', station: 'Harbour Bay', status: 'CHILL AUDIO', time: 'LIVE' },
-  { line: 'WEST EXPRESS', platform: 'PF 10', station: 'Sunset Depot', status: 'EVENING TALKS', time: 'LIVE' },
-  { line: 'DAWN LINE', platform: 'PF 08', station: 'Dawn Platform', status: 'MORNING CHATS', time: 'LIVE' },
+  { line: 'CENTRAL LINE', platform: 'PF 01', station: 'Delhi Central', status: 'BROADCASTING', time: 'LIVE' },
+  { line: 'WEST EXPRESS', platform: 'PF 04', station: 'Mumbai Central', status: 'OPEN MIC', time: 'LIVE' },
+  { line: 'EAST CORRIDOR', platform: 'PF 07', station: 'Patna Junction', status: 'STAGE ACTIVE', time: 'LIVE' },
+  { line: 'SOUTH TERMINUS', platform: 'PF 10', station: 'Chennai Central', status: 'DISCUSSIONS', time: 'LIVE' },
+  { line: 'NORTH LINE', platform: 'PF 13', station: 'Amritsar Junction', status: 'MORNING CHATS', time: 'LIVE' },
 ];
 
 export default function ArrivalScreen() {
@@ -91,10 +91,10 @@ export default function ArrivalScreen() {
           </Link>
 
           <Link
-            href="/room/grand-central"
+            href="/room/delhi-central"
             className="w-full sm:w-auto px-6 py-4 rounded-xl bg-gray-900 border border-gray-700/80 text-gray-200 font-semibold text-base hover:bg-gray-800 hover:text-white hover:border-gray-600 transition-all duration-200 flex items-center justify-center gap-2"
           >
-            <span>Quick Board: Grand Central</span>
+            <span>Quick Board: Delhi Central</span>
             <span className="text-xs px-2 py-0.5 rounded bg-gray-800 text-amber-300 font-mono">
               PF 01
             </span>

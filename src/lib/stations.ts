@@ -1,8 +1,8 @@
 /**
- * Station Registry — seed data and validation utilities.
+ * Station Registry — pre-registered normalized station rooms.
  *
- * All station slugs are pre-registered. The API layer rejects
- * any room name that isn't in this list.
+ * All station slugs are fixed and pre-registered. The API layer
+ * strictly rejects any room name that isn't in this list.
  */
 
 export type Region = 'north' | 'south' | 'east' | 'west' | 'central';
@@ -15,27 +15,109 @@ export interface Station {
 }
 
 /**
- * Seed station records.
- * These are clearly sample data — not live or scraped records.
+ * Normalized station records.
+ * Fixed set of registered rooms across 5 regional transit zones.
  */
 export const STATIONS: Station[] = [
   // Central
-  { slug: 'grand-central', name: 'Grand Central', region: 'central', description: 'The main hub — all lines converge here.' },
-  { slug: 'unity-square', name: 'Unity Square', region: 'central', description: 'Where every voice finds a platform.' },
-  { slug: 'crossroads', name: 'Crossroads', region: 'central', description: 'Meet travellers from every direction.' },
-  // North
-  { slug: 'northern-lights', name: 'Northern Lights', region: 'north', description: 'Late-night conversations under the aurora.' },
-  { slug: 'summit-station', name: 'Summit Station', region: 'north', description: 'Elevated discussions at the peak.' },
-  // South
-  { slug: 'harbour-bay', name: 'Harbour Bay', region: 'south', description: 'Coastal vibes and laid-back chats.' },
-  { slug: 'sunstone-terminal', name: 'Sunstone Terminal', region: 'south', description: 'Warm conversations in the southern sun.' },
-  // East
-  { slug: 'dawn-platform', name: 'Dawn Platform', region: 'east', description: 'Early risers and fresh perspectives.' },
-  { slug: 'east-bridge', name: 'East Bridge', region: 'east', description: 'Connecting ideas across the divide.' },
+  {
+    slug: 'delhi-central',
+    name: 'Delhi Central',
+    region: 'central',
+    description: 'The bustling national hub where main lines and diverse voices converge.',
+  },
+  {
+    slug: 'bhopal-junction',
+    name: 'Bhopal Junction',
+    region: 'central',
+    description: 'Central heartland platform connecting north and south audio corridors.',
+  },
+  {
+    slug: 'nagpur-junction',
+    name: 'Nagpur Junction',
+    region: 'central',
+    description: 'The zero-mile marker station for balanced discussions and open forums.',
+  },
+
   // West
-  { slug: 'sunset-depot', name: 'Sunset Depot', region: 'west', description: 'Wind down with evening conversations.' },
-  { slug: 'pacific-junction', name: 'Pacific Junction', region: 'west', description: 'Where the tracks meet the ocean.' },
-  { slug: 'canyon-halt', name: 'Canyon Halt', region: 'west', description: 'Echoing voices in the canyon.' },
+  {
+    slug: 'mumbai-central',
+    name: 'Mumbai Central',
+    region: 'west',
+    description: 'Fast-paced evening conversations, creative ideas, and western coast vibes.',
+  },
+  {
+    slug: 'ahmedabad-junction',
+    name: 'Ahmedabad Junction',
+    region: 'west',
+    description: 'Enterprising dialogue, business exchanges, and lively regional debates.',
+  },
+  {
+    slug: 'pune-junction',
+    name: 'Pune Junction',
+    region: 'west',
+    description: 'Tech builders, academic minds, and relaxed evening stage talks.',
+  },
+
+  // East
+  {
+    slug: 'patna-junction',
+    name: 'Patna Junction',
+    region: 'east',
+    description: 'Historic river gateway hosting vibrant, spirited, and deep conversations.',
+  },
+  {
+    slug: 'howrah-junction',
+    name: 'Howrah Junction',
+    region: 'east',
+    description: 'Iconic terminal platform for cultural discourse and morning perspectives.',
+  },
+  {
+    slug: 'guwahati-terminal',
+    name: 'Guwahati Terminal',
+    region: 'east',
+    description: 'Eastern sector hub connecting early risers and fresh perspectives.',
+  },
+
+  // South
+  {
+    slug: 'chennai-central',
+    name: 'Chennai Central',
+    region: 'south',
+    description: 'Classic southern terminus with thoughtful music, arts, and deep discussions.',
+  },
+  {
+    slug: 'bengaluru-city',
+    name: 'Bengaluru City',
+    region: 'south',
+    description: 'Product builders, technology pioneers, and weekend audio spaces.',
+  },
+  {
+    slug: 'hyderabad-deccan',
+    name: 'Hyderabad Deccan',
+    region: 'south',
+    description: 'Rich cultural crossroads blending heritage narratives with modern tech.',
+  },
+
+  // North
+  {
+    slug: 'amritsar-junction',
+    name: 'Amritsar Junction',
+    region: 'north',
+    description: 'Warm hospitality, lively storytelling, and community discussions.',
+  },
+  {
+    slug: 'chandigarh-terminal',
+    name: 'Chandigarh Terminal',
+    region: 'north',
+    description: 'Orderly, thought-provoking dialogue with fresh northern mountain breezes.',
+  },
+  {
+    slug: 'jaipur-junction',
+    name: 'Jaipur Junction',
+    region: 'north',
+    description: 'Vibrant pink city platform for art, architecture, and colourful chats.',
+  },
 ];
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -52,9 +134,10 @@ export function getValidSlugs(): string[] {
 
 /**
  * Normalize and validate a station slug.
- * Returns the normalized slug or null if invalid.
+ * Returns the normalized slug or null if invalid or unregistered.
  */
 export function normalizeSlug(raw: string): string | null {
+  if (!raw || typeof raw !== 'string') return null;
   const slug = raw.trim().toLowerCase();
   if (!SLUG_PATTERN.test(slug)) return null;
   return stationMap.has(slug) ? slug : null;

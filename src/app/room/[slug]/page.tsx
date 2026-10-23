@@ -620,7 +620,7 @@ function RoomViewInner({
           </div>
 
           {/* Standard Room Controls: Mute & Exit */}
-          <RoomControls onLeave={onLeave} />
+          <RoomControls onLeave={onLeave} onRequestSpeak={handleToggleSpeak} />
         </div>
       </footer>
     </div>

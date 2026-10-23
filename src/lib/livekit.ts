@@ -5,6 +5,7 @@
  * (API routes, Server Components). It accesses env secrets.
  *
  * NEVER log tokens or secrets.
+ * NEVER expose LIVEKIT_API_SECRET to the client.
  */
 
 import { AccessToken } from 'livekit-server-sdk';
@@ -18,36 +19,35 @@ function getEnvOrThrow(key: string): string {
 }
 
 export interface TokenOptions {
-  /** Validated room name (station slug). */
+  /** Validated room name (normalized station slug). */
   roomName: string;
-  /** Unique participant identity. */
+  /** Unique participant identity (generated server-side). */
   participantIdentity: string;
-  /** Display name shown in the room. */
+  /** Sanitized display name shown in the room. */
   participantName: string;
-  /** Whether the participant can publish audio. Default: false (listener). */
-  canPublish?: boolean;
 }
 
 /**
  * Create a short-lived LiveKit access token.
  *
- * Default permissions: canSubscribe=true, canPublish=false (listener-only).
- * Token TTL: 4 hours.
+ * Default permissions: canSubscribe=true, canPublish=false (strictly listener-only).
+ * Token TTL: 1 hour (short-lived).
  */
-export async function createToken(options: TokenOptions): Promise<string> {
+export async function createListenerToken(options: TokenOptions): Promise<string> {
   const apiKey = getEnvOrThrow('LIVEKIT_API_KEY');
   const apiSecret = getEnvOrThrow('LIVEKIT_API_SECRET');
 
   const token = new AccessToken(apiKey, apiSecret, {
     identity: options.participantIdentity,
     name: options.participantName,
-    ttl: '4h',
+    ttl: '1h', // 1 hour short-lived token
   });
 
+  // Strictly listener-only grants
   token.addGrant({
     room: options.roomName,
     roomJoin: true,
-    canPublish: options.canPublish ?? false,
+    canPublish: false,
     canSubscribe: true,
     canPublishData: false,
   });
@@ -59,9 +59,9 @@ export async function createToken(options: TokenOptions): Promise<string> {
  * Get the LiveKit WebSocket URL for the client.
  */
 export function getLiveKitUrl(): string {
-  const url = process.env.NEXT_PUBLIC_LIVEKIT_URL || process.env.LIVEKIT_URL;
+  const url = process.env.LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_URL;
   if (!url) {
-    throw new Error('Missing required environment variable: NEXT_PUBLIC_LIVEKIT_URL or LIVEKIT_URL');
+    throw new Error('Missing required environment variable: LIVEKIT_URL or NEXT_PUBLIC_LIVEKIT_URL');
   }
   return url;
 }

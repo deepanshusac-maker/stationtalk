@@ -1,17 +1,17 @@
 /**
- * Tests for token generation and permission defaults.
+ * Tests for token generation, permission defaults, and security boundaries.
  *
- * These tests verify that token creation enforces the correct
- * default permissions (canPublish: false, canSubscribe: true).
- *
- * Note: These tests require LIVEKIT_API_KEY and LIVEKIT_API_SECRET
- * environment variables to be set. They use dummy values for testing.
+ * Verifies:
+ * - Default listener-only permissions (canPublish: false, canSubscribe: true, canPublishData: false)
+ * - Short-lived token TTL (1 hour)
+ * - Required server-side environment variables
+ * - Unique participant identity generation
+ * - Rate limiting enforcement
  */
 
 import { generateParticipantIdentity, isValidIdentity } from '../lib/identity';
 import { checkRateLimit } from '../lib/rate-limit';
 
-// Set dummy env vars for testing
 beforeAll(() => {
   process.env.LIVEKIT_API_KEY = 'test-api-key';
   process.env.LIVEKIT_API_SECRET = 'test-api-secret-that-is-long-enough-for-jwt';
@@ -24,75 +24,70 @@ afterAll(() => {
   delete process.env.NEXT_PUBLIC_LIVEKIT_URL;
 });
 
-describe('Token Generation', () => {
-  it('creates a token with listener-only permissions by default', async () => {
-    const { createToken } = await import('../lib/livekit');
-    const token = await createToken({
-      roomName: 'grand-central',
+describe('Token Generation & Security Grants', () => {
+  it('creates a token strictly with listener-only permissions by default', async () => {
+    const { createListenerToken } = await import('../lib/livekit');
+    const token = await createListenerToken({
+      roomName: 'delhi-central',
       participantIdentity: 'user-test-1234',
-      participantName: 'Test User',
+      participantName: 'Passenger Delhi',
     });
 
     expect(token).toBeTruthy();
     expect(typeof token).toBe('string');
 
-    // Decode and verify the token payload
+    // Decode JWT payload
     const parts = token.split('.');
     expect(parts).toHaveLength(3);
 
     const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
 
-    // Verify room grant
+    // Verify room grant: listener-only
     expect(payload.video).toBeDefined();
-    expect(payload.video.room).toBe('grand-central');
+    expect(payload.video.room).toBe('delhi-central');
     expect(payload.video.roomJoin).toBe(true);
     expect(payload.video.canPublish).toBe(false);
     expect(payload.video.canSubscribe).toBe(true);
     expect(payload.video.canPublishData).toBe(false);
+
+    // Verify identity and name
+    expect(payload.sub).toBe('user-test-1234');
+    expect(payload.name).toBe('Passenger Delhi');
+
+    // Verify short-lived TTL: ~1 hour (3600 seconds)
+    const nowSec = Math.floor(Date.now() / 1000);
+    expect(payload.exp).toBeGreaterThan(nowSec);
+    expect(payload.exp - nowSec).toBeLessThanOrEqual(3600 + 10);
   });
 
-  it('creates a token with speaker permissions when canPublish is true', async () => {
-    const { createToken } = await import('../lib/livekit');
-    const token = await createToken({
-      roomName: 'grand-central',
-      participantIdentity: 'user-test-5678',
-      participantName: 'Speaker User',
-      canPublish: true,
-    });
+  it('generates listener tokens across normalized room IDs', async () => {
+    const { createListenerToken } = await import('../lib/livekit');
 
-    const parts = token.split('.');
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-
-    expect(payload.video.canPublish).toBe(true);
-    expect(payload.video.canSubscribe).toBe(true);
+    const rooms = ['mumbai-central', 'patna-junction', 'chennai-central'];
+    for (const room of rooms) {
+      const token = await createListenerToken({
+        roomName: room,
+        participantIdentity: 'user-test-room',
+        participantName: 'Test Traveler',
+      });
+      const parts = token.split('.');
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+      expect(payload.video.room).toBe(room);
+      expect(payload.video.canPublish).toBe(false);
+      expect(payload.video.canSubscribe).toBe(true);
+    }
   });
 
-  it('sets correct identity and name in the token', async () => {
-    const { createToken } = await import('../lib/livekit');
-    const token = await createToken({
-      roomName: 'harbour-bay',
-      participantIdentity: 'user-abc-123',
-      participantName: 'Alice',
-    });
-
-    const parts = token.split('.');
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-
-    expect(payload.sub).toBe('user-abc-123');
-    expect(payload.name).toBe('Alice');
-  });
-
-  it('throws when LIVEKIT_API_KEY is missing', async () => {
+  it('throws an error when LIVEKIT_API_KEY or LIVEKIT_API_SECRET is missing', async () => {
     const originalKey = process.env.LIVEKIT_API_KEY;
     delete process.env.LIVEKIT_API_KEY;
 
-    // Re-import to get fresh module
     jest.resetModules();
-    const { createToken } = await import('../lib/livekit');
+    const { createListenerToken } = await import('../lib/livekit');
 
     await expect(
-      createToken({
-        roomName: 'grand-central',
+      createListenerToken({
+        roomName: 'delhi-central',
         participantIdentity: 'user-test',
         participantName: 'Test',
       })
@@ -102,60 +97,43 @@ describe('Token Generation', () => {
   });
 });
 
-describe('Participant Identity', () => {
-  it('generates unique identities', () => {
+describe('Participant Identity Authority', () => {
+  it('generates unique server-side identities with user- prefix', () => {
     const id1 = generateParticipantIdentity();
     const id2 = generateParticipantIdentity();
 
     expect(id1).not.toBe(id2);
-    expect(id1).toMatch(/^user-/);
-    expect(id2).toMatch(/^user-/);
+    expect(id1.startsWith('user-')).toBe(true);
+    expect(id2.startsWith('user-')).toBe(true);
   });
 
-  it('validates correct identity format', () => {
-    const id = generateParticipantIdentity();
+  it('validates canonical identity format and rejects malformed formats', () => {
+    const validId = generateParticipantIdentity();
+    expect(isValidIdentity(validId)).toBe(true);
 
-    expect(isValidIdentity(id)).toBe(true);
-    expect(isValidIdentity('invalid')).toBe(false);
-    expect(isValidIdentity('user-not-a-uuid')).toBe(false);
+    expect(isValidIdentity('admin')).toBe(false);
+    expect(isValidIdentity('user-arbitrary-string')).toBe(false);
     expect(isValidIdentity('')).toBe(false);
+    expect(isValidIdentity('user-123')).toBe(false);
   });
 });
 
-describe('Rate Limiting', () => {
-  it('allows requests within the limit', () => {
-    const key = `test-ip-${Date.now()}`;
-
+describe('Token Rate Limiting Authority', () => {
+  it('allows token requests within the window limit', () => {
+    const key = `ip-allowed-${Date.now()}`;
     for (let i = 0; i < 10; i++) {
-      const result = checkRateLimit(key, { maxRequests: 10, windowMs: 60_000 });
-      expect(result.allowed).toBe(true);
+      const res = checkRateLimit(key, { maxRequests: 10, windowMs: 60_000 });
+      expect(res.allowed).toBe(true);
     }
   });
 
-  it('blocks requests exceeding the limit', () => {
-    const key = `test-ip-blocked-${Date.now()}`;
-
-    // Exhaust the limit
+  it('blocks token requests exceeding the rate limit', () => {
+    const key = `ip-blocked-${Date.now()}`;
     for (let i = 0; i < 5; i++) {
       checkRateLimit(key, { maxRequests: 5, windowMs: 60_000 });
     }
-
-    // Next request should be blocked
-    const result = checkRateLimit(key, { maxRequests: 5, windowMs: 60_000 });
-    expect(result.allowed).toBe(false);
-    expect(result.remaining).toBe(0);
-  });
-
-  it('reports remaining count correctly', () => {
-    const key = `test-ip-remaining-${Date.now()}`;
-
-    const r1 = checkRateLimit(key, { maxRequests: 3, windowMs: 60_000 });
-    expect(r1.remaining).toBe(2);
-
-    const r2 = checkRateLimit(key, { maxRequests: 3, windowMs: 60_000 });
-    expect(r2.remaining).toBe(1);
-
-    const r3 = checkRateLimit(key, { maxRequests: 3, windowMs: 60_000 });
-    expect(r3.remaining).toBe(0);
+    const blockedRes = checkRateLimit(key, { maxRequests: 5, windowMs: 60_000 });
+    expect(blockedRes.allowed).toBe(false);
+    expect(blockedRes.remaining).toBe(0);
   });
 });

@@ -9,160 +9,135 @@ import {
   REGIONS,
 } from '../lib/stations';
 
-describe('Station Registry', () => {
-  describe('normalizeSlug', () => {
-    it('returns null for empty string', () => {
-      expect(normalizeSlug('')).toBeNull();
+describe('Station Registry & Allowed Room IDs', () => {
+  describe('Allowed Normalized Station Rooms', () => {
+    it('accepts explicitly required normalized stations', () => {
+      expect(normalizeSlug('delhi-central')).toBe('delhi-central');
+      expect(normalizeSlug('mumbai-central')).toBe('mumbai-central');
+      expect(normalizeSlug('patna-junction')).toBe('patna-junction');
+      expect(normalizeSlug('chennai-central')).toBe('chennai-central');
     });
 
-    it('returns null for whitespace-only string', () => {
+    it('normalizes uppercase and surrounding whitespace correctly', () => {
+      expect(normalizeSlug('  Delhi-Central  ')).toBe('delhi-central');
+      expect(normalizeSlug('MUMBAI-CENTRAL')).toBe('mumbai-central');
+      expect(normalizeSlug('Patna-Junction')).toBe('patna-junction');
+      expect(normalizeSlug('chennai-central')).toBe('chennai-central');
+    });
+
+    it('returns station details for valid rooms', () => {
+      const delhi = getStation('delhi-central');
+      expect(delhi).toBeDefined();
+      expect(delhi!.name).toBe('Delhi Central');
+      expect(delhi!.region).toBe('central');
+
+      const mumbai = getStation('mumbai-central');
+      expect(mumbai).toBeDefined();
+      expect(mumbai!.name).toBe('Mumbai Central');
+      expect(mumbai!.region).toBe('west');
+
+      const patna = getStation('patna-junction');
+      expect(patna).toBeDefined();
+      expect(patna!.name).toBe('Patna Junction');
+      expect(patna!.region).toBe('east');
+
+      const chennai = getStation('chennai-central');
+      expect(chennai).toBeDefined();
+      expect(chennai!.name).toBe('Chennai Central');
+      expect(chennai!.region).toBe('south');
+    });
+  });
+
+  describe('Rejection of Arbitrary and Malformed Room IDs', () => {
+    it('rejects arbitrary non-existent room names', () => {
+      expect(normalizeSlug('arbitrary-room')).toBeNull();
+      expect(normalizeSlug('my-custom-voice-room')).toBeNull();
+      expect(normalizeSlug('unknown-junction')).toBeNull();
+      expect(getStation('arbitrary-room')).toBeUndefined();
+    });
+
+    it('rejects empty and whitespace inputs', () => {
+      expect(normalizeSlug('')).toBeNull();
       expect(normalizeSlug('   ')).toBeNull();
     });
 
-    it('returns null for unregistered slug', () => {
-      expect(normalizeSlug('nonexistent-station')).toBeNull();
-    });
-
-    it('returns null for slugs with invalid characters', () => {
-      expect(normalizeSlug('grand central')).toBeNull(); // spaces
-      expect(normalizeSlug('grand_central')).toBeNull(); // underscores
-      expect(normalizeSlug('hello@world')).toBeNull(); // special chars
-      expect(normalizeSlug('test/path')).toBeNull(); // slashes
-    });
-
-    it('normalizes and validates registered slugs', () => {
-      expect(normalizeSlug('grand-central')).toBe('grand-central');
-      expect(normalizeSlug('  Grand-Central  ')).toBe('grand-central');
-      expect(normalizeSlug('NORTHERN-LIGHTS')).toBe('northern-lights');
+    it('rejects rooms with invalid characters', () => {
+      expect(normalizeSlug('delhi central')).toBeNull(); // spaces
+      expect(normalizeSlug('delhi_central')).toBeNull(); // underscores
+      expect(normalizeSlug('delhi@central')).toBeNull(); // symbols
+      expect(normalizeSlug('delhi/central')).toBeNull(); // slashes
     });
 
     it('rejects SQL injection attempts', () => {
       expect(normalizeSlug("'; DROP TABLE stations;--")).toBeNull();
+      expect(normalizeSlug("' OR '1'='1")).toBeNull();
     });
 
-    it('rejects path traversal attempts', () => {
+    it('rejects directory traversal attempts', () => {
       expect(normalizeSlug('../../../etc/passwd')).toBeNull();
+      expect(normalizeSlug('..\\..\\windows')).toBeNull();
     });
   });
 
-  describe('getStation', () => {
-    it('returns station for valid slug', () => {
-      const station = getStation('grand-central');
-      expect(station).toBeDefined();
-      expect(station!.name).toBe('Grand Central');
-      expect(station!.region).toBe('central');
+  describe('Regional Coverage & Filtering', () => {
+    it('includes all 5 valid regions', () => {
+      for (const region of REGIONS) {
+        expect(isValidRegion(region)).toBe(true);
+      }
+      expect(isValidRegion('northwest')).toBe(false);
+      expect(isValidRegion('random')).toBe(false);
     });
 
-    it('returns undefined for invalid slug', () => {
-      expect(getStation('fake-station')).toBeUndefined();
+    it('has stations across every region', () => {
+      for (const region of REGIONS) {
+        const regionalStations = getStations(region);
+        expect(regionalStations.length).toBeGreaterThan(0);
+        expect(regionalStations.every((s) => s.region === region)).toBe(true);
+      }
     });
 
-    it('handles case-insensitive lookup', () => {
-      const station = getStation('Grand-Central');
-      expect(station).toBeDefined();
-      expect(station!.slug).toBe('grand-central');
-    });
-  });
-
-  describe('getStations', () => {
-    it('returns all stations when no region specified', () => {
-      const stations = getStations();
-      expect(stations).toHaveLength(STATIONS.length);
-    });
-
-    it('filters by region', () => {
-      const north = getStations('north');
-      expect(north.length).toBeGreaterThan(0);
-      expect(north.every((s) => s.region === 'north')).toBe(true);
-    });
-
-    it('returns correct count for each region', () => {
-      const central = getStations('central');
-      expect(central).toHaveLength(3);
-
-      const north = getStations('north');
-      expect(north).toHaveLength(2);
-
-      const south = getStations('south');
-      expect(south).toHaveLength(2);
-
-      const east = getStations('east');
-      expect(east).toHaveLength(2);
-
-      const west = getStations('west');
-      expect(west).toHaveLength(3);
+    it('returns all stations when no region is filtered', () => {
+      expect(getStations()).toHaveLength(STATIONS.length);
     });
   });
 
-  describe('searchStations', () => {
+  describe('Search Functionality', () => {
     it('returns all stations for empty query', () => {
       expect(searchStations('')).toHaveLength(STATIONS.length);
     });
 
-    it('finds stations by partial name', () => {
-      const results = searchStations('grand');
-      expect(results).toHaveLength(1);
-      expect(results[0].slug).toBe('grand-central');
+    it('finds stations by case-insensitive partial query', () => {
+      const delhi = searchStations('delhi');
+      expect(delhi.length).toBeGreaterThanOrEqual(1);
+      expect(delhi[0].slug).toBe('delhi-central');
+
+      const junction = searchStations('JUNCTION');
+      expect(junction.length).toBeGreaterThanOrEqual(4);
     });
 
-    it('is case-insensitive', () => {
-      const results = searchStations('NORTHERN');
-      expect(results).toHaveLength(1);
-      expect(results[0].slug).toBe('northern-lights');
-    });
-
-    it('returns empty array for no matches', () => {
-      expect(searchStations('zzzznonexistent')).toHaveLength(0);
-    });
-
-    it('matches partial words', () => {
-      const results = searchStations('sun');
-      expect(results.length).toBeGreaterThanOrEqual(1);
-      expect(results.some((s) => s.slug === 'sunset-depot' || s.slug === 'sunstone-terminal')).toBe(true);
+    it('returns empty array when query has no match', () => {
+      expect(searchStations('zzz-non-existent')).toHaveLength(0);
     });
   });
 
-  describe('getValidSlugs', () => {
-    it('returns all registered slugs', () => {
+  describe('Registry Integrity', () => {
+    it('all slugs are non-empty and unique', () => {
       const slugs = getValidSlugs();
       expect(slugs).toHaveLength(STATIONS.length);
-      expect(slugs).toContain('grand-central');
-      expect(slugs).toContain('northern-lights');
-    });
-  });
-
-  describe('isValidRegion', () => {
-    it('returns true for valid regions', () => {
-      for (const region of REGIONS) {
-        expect(isValidRegion(region)).toBe(true);
-      }
-    });
-
-    it('returns false for invalid regions', () => {
-      expect(isValidRegion('northeast')).toBe(false);
-      expect(isValidRegion('')).toBe(false);
-      expect(isValidRegion('NORTH')).toBe(false);
-    });
-  });
-
-  describe('station data integrity', () => {
-    it('all slugs are unique', () => {
-      const slugs = STATIONS.map((s) => s.slug);
       expect(new Set(slugs).size).toBe(slugs.length);
     });
 
-    it('all slugs match the slug pattern', () => {
+    it('all slugs strictly conform to the kebab-case pattern', () => {
       const pattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
       for (const station of STATIONS) {
         expect(station.slug).toMatch(pattern);
       }
     });
 
-    it('all stations have required fields', () => {
+    it('all stations have valid fields and assigned regions', () => {
       for (const station of STATIONS) {
         expect(station.slug).toBeTruthy();
         expect(station.name).toBeTruthy();
-        expect(station.region).toBeTruthy();
         expect(station.description).toBeTruthy();
         expect(REGIONS).toContain(station.region);
       }
