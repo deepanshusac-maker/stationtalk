@@ -16,7 +16,9 @@ function getEnvOrThrow(key: string): string {
  * Fetches real-time room occupancy from LiveKit Cloud SFU.
  * Returns a map of stationSlug -> participantCount for registered stations only.
  */
-export async function GET() {
+export async function GET(request: Request) {
+  // Accessing request ensures Next.js treats this handler as dynamic per-request
+  void request.url;
   try {
     const rawUrl = process.env.LIVEKIT_URL || process.env.NEXT_PUBLIC_LIVEKIT_URL;
     if (!rawUrl) {
