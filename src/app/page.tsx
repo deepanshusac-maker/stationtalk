@@ -77,7 +77,7 @@ export default function ArrivalScreen() {
         </p>
 
         {/* Primary Call to Action buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8 sm:mb-10 w-full max-w-md sm:max-w-none mx-auto">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-14 w-full max-w-md sm:max-w-none mx-auto">
           <Link
             href="/stations"
             className="w-full sm:w-auto px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-sm transition-all duration-200 shadow-[0_10px_25px_-5px_rgba(13,148,136,0.35)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] hover:scale-[1.02] flex items-center justify-center gap-3 group focus:outline-none focus:ring-4 focus:ring-teal-400/40 active:scale-95"
@@ -97,59 +97,6 @@ export default function ArrivalScreen() {
               PF 01
             </span>
           </Link>
-        </div>
-
-        {/* Zero Friction Guarantees Strip */}
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-mono text-slate-500 mb-12 sm:mb-16">
-          <span className="flex items-center gap-1.5">
-            <span className="text-teal-600 font-bold">✓</span>
-            <span>No sign-up or phone number</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-teal-600 font-bold">✓</span>
-            <span>Auto-generated anonymous handle</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-teal-600 font-bold">✓</span>
-            <span>15-min relaxed sessions</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="text-teal-600 font-bold">✓</span>
-            <span>Open mic (Unmute to talk)</span>
-          </span>
-        </div>
-
-        {/* 3 Core Value Panels */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 text-left mb-12 sm:mb-16">
-          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-teal-200/80 shadow-sm">
-              🎭
-            </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Zero Identity Attached</h3>
-            <p className="text-xs text-slate-600 leading-relaxed font-normal">
-              No profiles, photos, or history. Pick Male or Female once to receive a random transit moniker like <em>Rohan</em> or <em>Ananya</em>. Re-roll with 🎲 anytime. Say what you really feel.
-            </p>
-          </div>
-
-          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-indigo-200/80 shadow-sm">
-              ⏱️
-            </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">15-Min Platform Chats</h3>
-            <p className="text-xs text-slate-600 leading-relaxed font-normal">
-              Just like a memorable conversation with a fellow traveler waiting for a train. Sessions end at 15 minutes, so discussions stay fresh, energetic, and never drag out awkwardly.
-            </p>
-          </div>
-
-          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-emerald-200/80 shadow-sm">
-              🎙️
-            </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Open Mic Freedom</h3>
-            <p className="text-xs text-slate-600 leading-relaxed font-normal">
-              No speaker vs listener hierarchies or waiting for stage permission. Want to chime in? Just unmute your mic. Prefer to relax and listen? You&apos;re always welcome to just vibe.
-            </p>
-          </div>
         </div>
 
         {/* How It Works - 3 Easy Steps */}
