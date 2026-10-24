@@ -28,10 +28,11 @@ export interface TokenOptions {
 }
 
 /**
- * Create a short-lived LiveKit access token.
+ * Create a short-lived LiveKit access token with open-mic capabilities.
  *
- * Default permissions: canSubscribe=true, canPublish=false (strictly listener-only).
- * Token TTL: 1 hour (short-lived).
+ * Every passenger receives open publishing rights (canPublish: true, canSubscribe: true)
+ * so they can speak freely by simply unmuting their microphone with zero role hierarchy.
+ * Token TTL: 15 minutes (hard session boundary).
  */
 export async function createListenerToken(options: TokenOptions): Promise<string> {
   const apiKey = getEnvOrThrow('LIVEKIT_API_KEY');
@@ -43,13 +44,13 @@ export async function createListenerToken(options: TokenOptions): Promise<string
     ttl: '15m', // 15-minute maximum session token TTL
   });
 
-  // Strictly listener-only grants
+  // Open-mic participation: any passenger can publish audio tracks on unmute
   token.addGrant({
     room: options.roomName,
     roomJoin: true,
-    canPublish: false,
+    canPublish: true,
     canSubscribe: true,
-    canPublishData: false,
+    canPublishData: true,
   });
 
   return await token.toJwt();

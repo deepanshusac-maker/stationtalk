@@ -11,12 +11,11 @@ interface ParticipantTileProps {
 export function ParticipantTile({ participant }: ParticipantTileProps) {
   const isSpeaking = useIsSpeaking(participant);
   const isMuted = !participant.isMicrophoneEnabled;
-  const canPublish = participant.permissions?.canPublish ?? false;
   const displayName = participant.name || participant.identity;
 
   return (
-    <div className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-[#0e1320]/80 border border-white/[0.08] hover:border-white/[0.16] transition-all duration-200 shadow-md">
-      {/* Avatar Container with speaking glow */}
+    <div className="flex flex-col items-center gap-2.5 p-3.5 sm:p-4 rounded-2xl bg-[#0e1320]/80 border border-white/[0.08] hover:border-white/[0.18] transition-all duration-200 shadow-md glass-panel-interactive">
+      {/* Avatar Container with speaking pulse */}
       <div
         className={`relative transition-all duration-200 ${
           isSpeaking
@@ -31,9 +30,9 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
           className="shadow-lg"
         />
 
-        {/* Speaker Mic Indicator */}
-        {canPublish && (
-          <span className="absolute -bottom-1 -right-1 bg-teal-500 text-gray-950 text-[10px] font-bold p-1 rounded-full shadow-md">
+        {/* Live Mic Indicator badge on avatar */}
+        {!isMuted ? (
+          <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-gray-950 text-[10px] font-bold p-1 rounded-full shadow-md">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -42,12 +41,9 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
               />
             </svg>
           </span>
-        )}
-
-        {/* Muted icon */}
-        {canPublish && isMuted && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] p-1 rounded-full shadow-md">
-            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+        ) : (
+          <span className="absolute -bottom-1 -right-1 bg-white/[0.1] text-gray-400 text-[10px] p-1 rounded-full border border-white/[0.1] shadow-md">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
                 d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"
@@ -58,26 +54,34 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
         )}
       </div>
 
-      {/* Name & Animated Speaking Decibel Visualizer */}
+      {/* Name & Speaking Visualizer */}
       <div className="flex flex-col items-center gap-1 text-center w-full min-w-0">
         <span
-          className="text-xs font-semibold text-white truncate max-w-[5rem] sm:max-w-[6.5rem] tracking-tight"
+          className="text-xs sm:text-sm font-bold text-white truncate max-w-[5.5rem] sm:max-w-[7rem] tracking-tight"
           title={displayName}
         >
           {displayName}
         </span>
 
         {isSpeaking ? (
-          <div className="flex items-end gap-0.5 h-3 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
-            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-1" />
-            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-2" />
-            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-3" />
-            <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-4" />
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono text-emerald-400">
+            <div className="flex items-end gap-0.5 h-3">
+              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-1" />
+              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-2" />
+              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-3" />
+              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-4" />
+            </div>
+            <span>Speaking</span>
+          </div>
+        ) : !isMuted ? (
+          <div className="flex items-center gap-1 text-[10px] font-mono text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Mic Open</span>
           </div>
         ) : (
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
-            {canPublish ? 'Speaker' : 'Listener'}
-          </span>
+          <div className="flex items-center gap-1 text-[10px] font-mono text-gray-500">
+            <span>Muted</span>
+          </div>
         )}
       </div>
     </div>

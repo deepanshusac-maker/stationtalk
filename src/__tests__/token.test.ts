@@ -25,7 +25,7 @@ afterAll(() => {
 });
 
 describe('Token Generation & Security Grants', () => {
-  it('creates a token strictly with listener-only permissions by default', async () => {
+  it('creates an open-mic session token allowing direct speech on unmute', async () => {
     const { createListenerToken } = await import('../lib/livekit');
     const token = await createListenerToken({
       roomName: 'delhi-central',
@@ -42,13 +42,13 @@ describe('Token Generation & Security Grants', () => {
 
     const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
 
-    // Verify room grant: listener-only
+    // Verify room grant: open-mic participation
     expect(payload.video).toBeDefined();
     expect(payload.video.room).toBe('delhi-central');
     expect(payload.video.roomJoin).toBe(true);
-    expect(payload.video.canPublish).toBe(false);
+    expect(payload.video.canPublish).toBe(true);
     expect(payload.video.canSubscribe).toBe(true);
-    expect(payload.video.canPublishData).toBe(false);
+    expect(payload.video.canPublishData).toBe(true);
 
     // Verify identity and name
     expect(payload.sub).toBe('user-test-1234');
@@ -61,7 +61,7 @@ describe('Token Generation & Security Grants', () => {
     expect(payload.exp - nowSec).toBeGreaterThanOrEqual(900 - 10);
   });
 
-  it('generates listener tokens across normalized room IDs', async () => {
+  it('generates tokens across normalized room IDs with open-mic grants', async () => {
     const { createListenerToken } = await import('../lib/livekit');
 
     const rooms = ['mumbai-central', 'patna-junction', 'chennai-central'];
@@ -74,7 +74,7 @@ describe('Token Generation & Security Grants', () => {
       const parts = token.split('.');
       const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
       expect(payload.video.room).toBe(room);
-      expect(payload.video.canPublish).toBe(false);
+      expect(payload.video.canPublish).toBe(true);
       expect(payload.video.canSubscribe).toBe(true);
     }
   });

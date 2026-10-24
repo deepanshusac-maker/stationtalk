@@ -327,7 +327,7 @@ function RoomPageContent() {
                     </span>
                   ) : (
                     <>
-                      <span>🎧 Step Onto Platform (15m Session)</span>
+                      <span>🎙️ Enter Station Lounge (15m Session)</span>
                       <span className="text-xs">➔</span>
                     </>
                   )}
@@ -335,9 +335,9 @@ function RoomPageContent() {
               </div>
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400 font-mono">
-                <span>⏱️ 15-Minute Live Voice Session</span>
+                <span>⏱️ 15-Minute Voice Session</span>
                 <span>•</span>
-                <span>Listen-Only Default</span>
+                <span>Open Mic (Muted by default)</span>
               </div>
             </div>
           </div>
@@ -395,8 +395,6 @@ function RoomViewInner({
   const { localParticipant } = useLocalParticipant();
   const { canPlayAudio, startAudio } = useAudioPlayback();
 
-  const [promoting, setPromoting] = useState(false);
-  const [micError, setMicError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [, setEventTick] = useState(0);
 
@@ -477,10 +475,6 @@ function RoomViewInner({
     };
   }, [localParticipant]);
 
-  const speakers = participants.filter((p) => p.permissions?.canPublish);
-  const listeners = participants.filter((p) => !p.permissions?.canPublish);
-  const isCanPublish = localParticipant.permissions?.canPublish ?? false;
-
   // Copy Room Link to Clipboard
   const handleCopyLink = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -489,59 +483,6 @@ function RoomViewInner({
       setTimeout(() => setCopied(false), 2500);
     }
   }, []);
-
-  // Server-authorized promotion & demotion
-  const handleToggleSpeak = useCallback(async () => {
-    if (sessionExpired) return;
-    setPromoting(true);
-    setMicError(null);
-
-    try {
-      const willPublish = !isCanPublish;
-
-      // 1. Authorize on server via /api/promote (enforces 7-speaker cap)
-      const res = await fetch('/api/promote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomName: station.slug,
-          identity: localParticipant.identity,
-          canPublish: willPublish,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Server promotion failed with HTTP ${res.status}`);
-      }
-
-      // 2. Control actual microphone hardware track
-      if (willPublish) {
-        await localParticipant.setMicrophoneEnabled(true);
-      } else {
-        await localParticipant.setMicrophoneEnabled(false);
-      }
-    } catch (err) {
-      const msg = (err as Error).message || 'Unknown error';
-      if (
-        msg.toLowerCase().includes('permission') ||
-        msg.toLowerCase().includes('denied') ||
-        msg.toLowerCase().includes('notallowed')
-      ) {
-        setMicError('Microphone permission blocked. Please enable microphone permissions in your browser settings and try again.');
-      } else if (
-        msg.toLowerCase().includes('not found') ||
-        msg.toLowerCase().includes('unavailable') ||
-        msg.toLowerCase().includes('device')
-      ) {
-        setMicError('No microphone detected. Please plug in headphones or a headset and try again.');
-      } else {
-        setMicError(msg);
-      }
-    } finally {
-      setPromoting(false);
-    }
-  }, [isCanPublish, localParticipant, station.slug, sessionExpired]);
 
   // Clean room disconnection and resource release
   const handleLeaveRoom = useCallback(async () => {
@@ -655,6 +596,9 @@ function RoomViewInner({
     );
   }
 
+  const isLocalMicLive = localParticipant?.isMicrophoneEnabled ?? false;
+  const localName = localParticipant?.name || 'You';
+
   return (
     <div className="flex-1 flex flex-col justify-between saas-mesh-bg saas-dots-pattern min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)]">
       {/* Top Station Header & Status Bar */}
@@ -674,7 +618,7 @@ function RoomViewInner({
                 </span>
               </h1>
               <p className="text-[10px] font-mono text-gray-400 truncate">
-                {participants.length} {participants.length === 1 ? 'PERSON' : 'PEOPLE'} IN LOUNGE
+                {participants.length} {participants.length === 1 ? 'PASSENGER' : 'PASSENGERS'} IN STATION
               </p>
             </div>
           </div>
@@ -701,7 +645,7 @@ function RoomViewInner({
             <button
               onClick={handleCopyLink}
               className="px-2.5 sm:px-3 py-1 rounded-xl glass-pill text-[11px] sm:text-xs font-mono text-gray-300 hover:text-white transition-all flex items-center gap-1 focus:outline-none"
-              title="Copy room link to invite listeners"
+              title="Copy room link to invite passengers"
             >
               {copied ? (
                 <>
@@ -726,8 +670,8 @@ function RoomViewInner({
         </div>
       </header>
 
-      {/* Main Room Stage */}
-      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 flex-1 w-full relative z-10 pb-24">
+      {/* Main Room Stage: Unified Platform Lounge */}
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 flex-1 w-full relative z-10 pb-28">
         {/* Browser Autoplay Policy Warning */}
         {!canPlayAudio && (
           <div className="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-3xl glass-panel border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
@@ -751,111 +695,69 @@ function RoomViewInner({
           </div>
         )}
 
-        {/* Stage Speakers Section */}
-        <div className="mb-4 sm:mb-8 glass-panel glass-specular rounded-2xl sm:rounded-3xl p-4 sm:p-7">
+        {/* Unified Station Lounge Grid */}
+        <div className="glass-panel glass-specular rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-2xl">
           <div className="flex items-center justify-between mb-4 sm:mb-6 pb-2.5 sm:pb-3 border-b border-white/[0.06]">
             <div className="flex items-center gap-2">
               <span className="text-xs sm:text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-                <span>🎙️</span>
-                <span>Stage Speakers</span>
+                <span>🚉</span>
+                <span>Station Lounge</span>
               </span>
               <span className="text-[10px] sm:text-xs font-mono px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/25">
-                {speakers.length}/7 Cap
+                {participants.length} {participants.length === 1 ? 'Passenger' : 'Passengers'}
               </span>
             </div>
             <span className="text-[10px] font-mono text-gray-400 hidden sm:inline-block">
-              WebRTC Opus Mesh
+              Open Audio Lounge • Unmute below to talk
             </span>
           </div>
 
-          {speakers.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-              {speakers.map((p) => (
+          {participants.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3.5 md:gap-4">
+              {participants.map((p) => (
                 <ParticipantTile key={p.identity} participant={p} />
               ))}
             </div>
           ) : (
-            <div className="p-6 sm:p-8 rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.08] text-center">
-              <div className="text-2xl sm:text-3xl mb-2">🎙️</div>
-              <p className="text-xs sm:text-sm text-gray-300 font-medium">The stage is currently open.</p>
+            <div className="p-8 rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.08] text-center">
+              <div className="text-2xl sm:text-3xl mb-2">🚉</div>
+              <p className="text-xs sm:text-sm text-gray-300 font-medium">The lounge is quiet.</p>
               <p className="text-[11px] text-gray-500 mt-1">
-                Take the microphone below to begin speaking to the station.
+                You are on the platform. Unmute below to begin talking, or share the link to invite friends.
               </p>
-            </div>
-          )}
-        </div>
-
-        {/* Platform Listeners / Audience Section */}
-        <div className="glass-panel glass-specular rounded-2xl sm:rounded-3xl p-4 sm:p-7">
-          <div className="flex items-center justify-between mb-4 sm:mb-6 pb-2.5 sm:pb-3 border-b border-white/[0.06]">
-            <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-                <span>🎧</span>
-                <span>Concourse Audience</span>
-              </span>
-              <span className="text-[10px] sm:text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-gray-400 border border-white/[0.08]">
-                {listeners.length} Listening
-              </span>
-            </div>
-            <span className="text-[10px] font-mono text-gray-500 hidden sm:inline-block">
-              Listen-only travellers
-            </span>
-          </div>
-
-          {listeners.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-              {listeners.map((p) => (
-                <ParticipantTile key={p.identity} participant={p} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-4 sm:py-6 text-gray-500 font-mono text-xs">
-              No other listeners in the station right now.
             </div>
           )}
         </div>
       </main>
 
-      {/* Mic error notice */}
-      {micError && (
-        <div className="fixed bottom-20 inset-x-0 z-40 max-w-lg mx-auto px-4">
-          <div className="p-3 bg-red-500/20 border border-red-500/40 rounded-2xl text-red-300 text-xs font-mono flex items-center justify-between gap-3 shadow-2xl backdrop-blur-md">
-            <span className="truncate">⚠️ {micError}</span>
-            <button
-              onClick={() => setMicError(null)}
-              className="text-red-400 hover:text-white font-bold text-sm px-2 py-0.5 rounded shrink-0"
-              aria-label="Dismiss error"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Floating Glass Dock Controls */}
-      <footer className="fixed bottom-3 inset-x-0 z-40 max-w-md mx-auto px-3 w-full">
-        <div className="glass-dock rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-2xl flex items-center justify-between gap-2">
-          {/* Status info */}
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-sm shadow-inner shrink-0">
-              {isCanPublish ? '🎙️' : '🎧'}
-            </div>
+      <footer className="fixed bottom-3 inset-x-0 z-40 max-w-lg mx-auto px-3 w-full">
+        <div className="glass-dock rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl flex items-center justify-between gap-2">
+          {/* User Status */}
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <AvatarCapsule name={localName} size="sm" showEyes={true} />
             <div className="min-w-0">
-              <div className="text-xs font-bold text-white tracking-tight truncate">
-                {isCanPublish ? 'Speaker' : 'Listener'}
+              <div className="text-xs font-bold text-white tracking-tight truncate max-w-[90px] sm:max-w-[130px]">
+                {localName}
               </div>
-              <div className="text-[10px] text-gray-400 truncate">
-                {isCanPublish ? 'On Stage' : 'Audience'}
+              <div className="flex items-center gap-1 text-[10px] font-mono">
+                {isLocalMicLive ? (
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Mic Live</span>
+                  </span>
+                ) : (
+                  <span className="text-red-400 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                    <span>Muted</span>
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Unified Controls: Mute/Step Down/Take Mic/Leave */}
-          <RoomControls
-            onLeave={handleLeaveRoom}
-            onToggleSpeak={handleToggleSpeak}
-            promoting={promoting}
-          />
+          {/* Simple Microphone Toggle & Leave */}
+          <RoomControls onLeave={handleLeaveRoom} />
         </div>
       </footer>
     </div>
