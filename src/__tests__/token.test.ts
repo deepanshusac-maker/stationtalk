@@ -54,10 +54,11 @@ describe('Token Generation & Security Grants', () => {
     expect(payload.sub).toBe('user-test-1234');
     expect(payload.name).toBe('Passenger Delhi');
 
-    // Verify short-lived TTL: ~1 hour (3600 seconds)
+    // Verify short-lived session TTL: 15 minutes (900 seconds)
     const nowSec = Math.floor(Date.now() / 1000);
     expect(payload.exp).toBeGreaterThan(nowSec);
-    expect(payload.exp - nowSec).toBeLessThanOrEqual(3600 + 10);
+    expect(payload.exp - nowSec).toBeLessThanOrEqual(900 + 10);
+    expect(payload.exp - nowSec).toBeGreaterThanOrEqual(900 - 10);
   });
 
   it('generates listener tokens across normalized room IDs', async () => {

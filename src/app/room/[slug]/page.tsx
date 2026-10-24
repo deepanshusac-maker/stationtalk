@@ -20,7 +20,6 @@ import { AvatarCapsule } from '@/components/AvatarCapsule';
 import { transitChime } from '@/lib/chime';
 import {
   type Gender,
-  setStoredGender,
   generateRandomName,
   getOrInitAnonymousName,
   STORAGE_KEY_NAME,
@@ -90,7 +89,6 @@ function RoomPageContent() {
 
   const [joinState, setJoinState] = useState<JoinState>({ status: 'idle' });
   const [customName, setCustomName] = useState<string | null>(null);
-  const [customGender, setCustomGender] = useState<Gender | null>(null);
 
   // useSyncExternalStore prevents SSR hydration mismatch while reading from localStorage
   const savedName = useSyncExternalStore(
@@ -99,13 +97,12 @@ function RoomPageContent() {
     getServerNameSnapshot
   );
 
-  const savedGender = useSyncExternalStore(
+  const gender = useSyncExternalStore(
     subscribeStorage,
     getStoredGenderSnapshot,
     getServerGenderSnapshot
   );
 
-  const gender = customGender ?? savedGender;
   const displayName = customName !== null ? customName : savedName;
   const [error, setError] = useState<string | null>(null);
 
@@ -116,20 +113,7 @@ function RoomPageContent() {
   const stationIndex = station ? STATIONS.findIndex((s) => s.slug === station.slug) : 0;
   const platformNumber = String(stationIndex + 1).padStart(2, '0');
 
-  const handleSelectGender = useCallback((newGender: Gender) => {
-    setCustomGender(newGender);
-    setStoredGender(newGender);
-    const chosen = generateRandomName(newGender);
-    setCustomName(chosen);
-    try {
-      localStorage.setItem(STORAGE_KEY_NAME, chosen);
-      localStorage.setItem('stationtalk_passenger_name', chosen);
-      window.dispatchEvent(new Event('stationtalk_name_change'));
-    } catch {
-      // Ignore storage errors
-    }
-  }, []);
-
+  // Re-roll name draws from user's one-time chosen gender
   const handleRandomName = useCallback(() => {
     const chosen = generateRandomName(gender);
     setCustomName(chosen);
@@ -270,47 +254,6 @@ function RoomPageContent() {
             </div>
 
             <div className="space-y-4 sm:space-y-5">
-              {/* Gender Persona Selector */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-mono font-semibold text-gray-300 uppercase tracking-wider">
-                    Persona Choice
-                  </label>
-                  <span className="text-[11px] font-mono text-teal-300">
-                    {gender === 'male' ? '👨 Male names' : '👩 Female names'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectGender('male')}
-                    className={`py-2.5 px-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      gender === 'male'
-                        ? 'bg-teal-500/20 border-teal-400 text-teal-200 shadow-[0_0_15px_rgba(20,184,166,0.25)]'
-                        : 'bg-white/[0.03] border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.06]'
-                    }`}
-                  >
-                    <span className="text-base">👨</span>
-                    <span>Male</span>
-                    {gender === 'male' && <span className="text-[10px] text-teal-400 font-bold">✓</span>}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSelectGender('female')}
-                    className={`py-2.5 px-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      gender === 'female'
-                        ? 'bg-teal-500/20 border-teal-400 text-teal-200 shadow-[0_0_15px_rgba(20,184,166,0.25)]'
-                        : 'bg-white/[0.03] border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.06]'
-                    }`}
-                  >
-                    <span className="text-base">👩</span>
-                    <span>Female</span>
-                    {gender === 'female' && <span className="text-[10px] text-teal-400 font-bold">✓</span>}
-                  </button>
-                </div>
-              </div>
-
               {/* Anonymous Handle with Shuffle */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
@@ -384,16 +327,18 @@ function RoomPageContent() {
                     </span>
                   ) : (
                     <>
-                      <span>🎧 Step Onto Platform as Listener</span>
+                      <span>🎧 Step Onto Platform (15m Session)</span>
                       <span className="text-xs">➔</span>
                     </>
                   )}
                 </button>
               </div>
 
-              <p className="text-[11px] text-gray-400 text-center font-mono">
-                All travellers enter in listen-only mode. You can request to speak on stage at any time.
-              </p>
+              <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400 font-mono">
+                <span>⏱️ 15-Minute Live Voice Session</span>
+                <span>•</span>
+                <span>Listen-Only Default</span>
+              </div>
             </div>
           </div>
         </div>
@@ -455,6 +400,42 @@ function RoomViewInner({
   const [copied, setCopied] = useState(false);
   const [, setEventTick] = useState(0);
 
+  // 15-minute maximum session timer (900 seconds)
+  const [secondsRemaining, setSecondsRemaining] = useState(15 * 60);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setSessionExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // When session expired: cleanly disconnect and release media
+  useEffect(() => {
+    if (sessionExpired) {
+      if (localParticipant?.isMicrophoneEnabled) {
+        localParticipant.setMicrophoneEnabled(false).catch(() => {});
+      }
+      room?.disconnect().catch(() => {});
+      transitChime.playArrivalChime();
+    }
+  }, [sessionExpired, localParticipant, room]);
+
+  const formatCountdown = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const rem = secs % 60;
+    return `${String(mins).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+  };
+
   // Subscribe to LiveKit events to ensure participant lists & counts update on all state changes
   useEffect(() => {
     if (!room) return;
@@ -511,6 +492,7 @@ function RoomViewInner({
 
   // Server-authorized promotion & demotion
   const handleToggleSpeak = useCallback(async () => {
+    if (sessionExpired) return;
     setPromoting(true);
     setMicError(null);
 
@@ -546,7 +528,7 @@ function RoomViewInner({
         msg.toLowerCase().includes('denied') ||
         msg.toLowerCase().includes('notallowed')
       ) {
-        setMicError('Microphone permission blocked. Please enable microphone permissions in your mobile browser settings and try again.');
+        setMicError('Microphone permission blocked. Please enable microphone permissions in your browser settings and try again.');
       } else if (
         msg.toLowerCase().includes('not found') ||
         msg.toLowerCase().includes('unavailable') ||
@@ -559,7 +541,7 @@ function RoomViewInner({
     } finally {
       setPromoting(false);
     }
-  }, [isCanPublish, localParticipant, station.slug]);
+  }, [isCanPublish, localParticipant, station.slug, sessionExpired]);
 
   // Clean room disconnection and resource release
   const handleLeaveRoom = useCallback(async () => {
@@ -574,6 +556,46 @@ function RoomViewInner({
       onLeave();
     }
   }, [localParticipant, room, onLeave]);
+
+  // Session Expired Recovery Screen
+  if (sessionExpired) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-[#07090e] saas-mesh-bg">
+        <div className="text-center max-w-md p-6 sm:p-8 rounded-3xl glass-panel border border-teal-500/30 shadow-2xl glass-specular animate-in fade-in duration-300">
+          <div className="w-16 h-16 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-3xl mx-auto mb-4 shadow-[0_0_20px_rgba(20,184,166,0.25)]">
+            ⏳
+          </div>
+          <span className="text-[10px] font-mono tracking-widest uppercase px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/25 mb-2 inline-block">
+            15-MIN SESSION COMPLETED
+          </span>
+          <h2 className="text-xl sm:text-2xl font-black text-white mt-2 mb-2 tracking-tight">
+            Station Journey Concluded
+          </h2>
+          <p className="text-xs text-gray-400 leading-relaxed mb-6">
+            Platform sessions are capped at 15 minutes to keep conversations dynamic and give every passenger an opportunity to participate.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => {
+                setSessionExpired(false);
+                setSecondsRemaining(15 * 60);
+                onReconnect();
+              }}
+              className="flex-1 py-3.5 bg-teal-500 text-gray-950 font-extrabold text-xs sm:text-sm rounded-xl hover:bg-teal-400 transition-all shadow-[0_0_20px_rgba(20,184,166,0.35)] focus:outline-none focus:ring-2 focus:ring-teal-400 active:scale-95"
+            >
+              🔄 Board Fresh 15m Session
+            </button>
+            <button
+              onClick={onLeave}
+              className="flex-1 py-3.5 bg-white/[0.05] text-gray-300 font-semibold text-xs sm:text-sm rounded-xl hover:bg-white/[0.1] transition-all border border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-teal-400 active:scale-95"
+            >
+              ← Concourse
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Connection State: Connecting
   if (connectionState === ConnectionState.Connecting) {
@@ -657,11 +679,28 @@ function RoomViewInner({
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* 15-Minute Countdown Timer & Quick Actions */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* 15m Session Countdown */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full glass-pill text-[11px] sm:text-xs font-mono">
+              <span className="text-xs">⏱️</span>
+              <span
+                className={
+                  secondsRemaining < 60
+                    ? 'text-red-400 font-bold animate-pulse'
+                    : secondsRemaining < 180
+                    ? 'text-amber-400 font-bold'
+                    : 'text-teal-300 font-medium'
+                }
+                title="15-minute maximum session countdown"
+              >
+                {formatCountdown(secondsRemaining)}
+              </span>
+            </div>
+
             <button
               onClick={handleCopyLink}
-              className="px-2.5 sm:px-3.5 py-1.5 rounded-xl glass-pill text-[11px] sm:text-xs font-mono text-gray-300 hover:text-white transition-all flex items-center gap-1 focus:outline-none"
+              className="px-2.5 sm:px-3 py-1 rounded-xl glass-pill text-[11px] sm:text-xs font-mono text-gray-300 hover:text-white transition-all flex items-center gap-1 focus:outline-none"
               title="Copy room link to invite listeners"
             >
               {copied ? (
@@ -679,7 +718,7 @@ function RoomViewInner({
 
             <Link
               href="/stations"
-              className="px-2.5 sm:px-3.5 py-1.5 rounded-xl glass-pill text-[11px] sm:text-xs font-mono text-gray-400 hover:text-white transition-colors"
+              className="px-2.5 sm:px-3 py-1 rounded-xl glass-pill text-[11px] sm:text-xs font-mono text-gray-400 hover:text-white transition-colors"
             >
               Concourse
             </Link>

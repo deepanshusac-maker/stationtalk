@@ -40,7 +40,7 @@ export async function createListenerToken(options: TokenOptions): Promise<string
   const token = new AccessToken(apiKey, apiSecret, {
     identity: options.participantIdentity,
     name: options.participantName,
-    ttl: '1h', // 1 hour short-lived token
+    ttl: '15m', // 15-minute maximum session token TTL
   });
 
   // Strictly listener-only grants

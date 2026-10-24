@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
         url,
         identity,
         roomName: normalizedSlug,
+        sessionDurationSeconds: 15 * 60, // 15-minute maximum session
       },
       {
         status: 200,
