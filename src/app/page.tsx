@@ -91,10 +91,10 @@ export default function ArrivalScreen() {
 
           <Link
             href="/room/coimbatore-junction"
-            className="w-full sm:w-auto px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl glass-panel-interactive text-slate-800 font-bold text-sm hover:text-slate-950 flex items-center justify-center gap-2.5 active:scale-95 border-slate-200 bg-white/90"
+            className="w-full sm:w-auto px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl text-slate-800 font-bold text-sm hover:text-slate-950 hover:border-teal-400 flex items-center justify-center gap-2.5 active:scale-95 border border-slate-200/90 bg-white shadow-sm transition-all"
           >
             <span>Quick Board: Coimbatore Junction</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-teal-700 font-mono border border-slate-200 font-semibold">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-teal-800 font-mono border border-slate-200 font-bold">
               PF 01
             </span>
           </Link>
@@ -102,32 +102,32 @@ export default function ArrivalScreen() {
 
         {/* 3 World-Class SaaS Feature Panels */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 text-left">
-          <div className="p-5 sm:p-6 rounded-3xl glass-panel-interactive glass-specular border-slate-200/80 bg-white/85 shadow-sm">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-teal-200/80 shadow-sm">
+          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-teal-200/80 shadow-sm">
               🧭
             </div>
             <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">26 Regional Hubs</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed font-normal">
               Travel across South, North, East, West, and Central corridors. Each station hosts a distinct regional vibe and open discussions.
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 rounded-3xl glass-panel-interactive glass-specular border-slate-200/80 bg-white/85 shadow-sm">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-indigo-200/80 shadow-sm">
+          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-indigo-200/80 shadow-sm">
               🎭
             </div>
             <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Anonymous Personas</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed font-normal">
               No sign-up or real names required. Express yourself freely with auto-generated transit monikers and 1-click 🎲 identity re-rolling.
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 rounded-3xl glass-panel-interactive glass-specular border-slate-200/80 bg-white/85 shadow-sm">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-emerald-200/80 shadow-sm">
+          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-emerald-200/80 shadow-sm">
               ⚡
             </div>
             <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Sub-100ms SFU Mesh</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed font-normal">
               Powered by LiveKit Cloud. High-fidelity Opus audio, 15-minute dynamic session boundaries, and support for hundreds of simultaneous listeners.
             </p>
           </div>

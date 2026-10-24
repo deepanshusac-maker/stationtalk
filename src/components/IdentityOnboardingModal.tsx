@@ -128,7 +128,7 @@ export function IdentityOnboardingModal() {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md bg-white/95 border border-slate-200/90 rounded-t-3xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl glass-specular max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-md bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl glass-specular max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby="identity-modal-title"
@@ -220,7 +220,7 @@ export function IdentityOnboardingModal() {
         </div>
 
         {/* Assigned Random Persona Card */}
-        <div className="mb-6 p-4 rounded-2xl bg-slate-50/90 border border-slate-200/90">
+        <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-mono font-semibold text-slate-700 uppercase tracking-wider">
               2. Your Anonymous Handle

@@ -50,15 +50,15 @@ export function StationGrid({ participantCounts }: StationGridProps) {
 
       {/* Grid of Station Cards */}
       {filteredStations.length === 0 ? (
-        <div className="text-center py-16 px-4 rounded-2xl bg-[#131926] border border-[#212b3c]">
+        <div className="text-center py-16 px-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
           <div className="text-3xl mb-2">🔍</div>
-          <h3 className="text-base font-bold text-white mb-1">No stations found</h3>
-          <p className="text-xs text-gray-400 max-w-xs mx-auto mb-4">
+          <h3 className="text-base font-bold text-slate-900 mb-1">No stations found</h3>
+          <p className="text-xs text-slate-500 max-w-xs mx-auto mb-4 font-normal">
             Try searching for a different city, state, or reset your filters.
           </p>
           <button
             onClick={handleReset}
-            className="px-4 py-2 rounded-xl bg-teal-500 text-gray-950 font-bold text-xs hover:bg-teal-400 transition-all shadow-md shadow-teal-500/20"
+            className="px-4 py-2.5 rounded-xl bg-teal-600 text-white font-bold text-xs hover:bg-teal-500 transition-all shadow-md shadow-teal-600/20 active:scale-95"
           >
             Show All {STATIONS.length} Stations
           </button>

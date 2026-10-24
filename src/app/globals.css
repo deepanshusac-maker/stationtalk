@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
+  --background: #f1f5f9;
   --foreground: #0f172a;
   --accent-teal: #0d9488;
   --accent-cyan: #0891b2;
@@ -25,62 +25,62 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Light SaaS Atmospheric Background Mesh */
+/* Light SaaS Atmospheric Background Mesh - Warm Slate with Ambient Glows */
 .saas-mesh-bg {
   position: relative;
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(20, 184, 166, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 50% 0%, rgba(13, 148, 136, 0.12) 0%, transparent 60%),
     radial-gradient(circle at 85% 25%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 15% 65%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+    radial-gradient(circle at 15% 65%, rgba(6, 182, 212, 0.09) 0%, transparent 50%);
 }
 
 .saas-dots-pattern {
-  background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(15, 23, 42, 0.07) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
-/* Glassmorphism primitives (Light Theme) */
+/* Glassmorphism primitives (Light Theme with distinct card depth) */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.88);
+  background: #ffffff;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.06), 0 1px 3px 0 rgba(15, 23, 42, 0.03), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  border: 1px solid rgba(203, 213, 225, 0.85);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 1px 3px 0 rgba(15, 23, 42, 0.03);
 }
 
 .glass-panel-interactive {
-  background: rgba(255, 255, 255, 0.82);
+  background: #ffffff;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 8px 25px -8px rgba(15, 23, 42, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05), 0 1px 2px 0 rgba(15, 23, 42, 0.03);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-panel-interactive:hover {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(13, 148, 136, 0.4);
+  background: #ffffff;
+  border-color: rgba(13, 148, 136, 0.45);
   transform: translateY(-2px);
-  box-shadow: 0 20px 40px -15px rgba(13, 148, 136, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  box-shadow: 0 14px 28px -6px rgba(13, 148, 136, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
 }
 
 .glass-pill {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  border: 1px solid rgba(203, 213, 225, 0.85);
   box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-pill:hover {
   background: #ffffff;
-  border-color: rgba(203, 213, 225, 1);
+  border-color: rgba(148, 163, 184, 1);
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(203, 213, 225, 0.9);
@@ -113,11 +113,11 @@ body {
 
 /* Floating Glass Dock (macOS / Linear Light style) */
 .glass-dock {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.12), 0 4px 15px -3px rgba(15, 23, 42, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12), 0 4px 15px -3px rgba(15, 23, 42, 0.06);
 }
 
 /* Real-time speaking audio level bounce */

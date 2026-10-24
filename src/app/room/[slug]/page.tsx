@@ -217,7 +217,7 @@ function RoomPageContent() {
   // --- Join Form: Passenger Boarding Pass ---
   if (joinState.status === 'idle' || joinState.status === 'joining' || joinState.status === 'error') {
     return (
-      <div className="flex-1 flex items-center justify-center p-3 sm:p-6 bg-[#f8fafc] py-8 sm:py-12 saas-mesh-bg">
+      <div className="flex-1 flex items-center justify-center p-3 sm:p-6 bg-[#f1f5f9] py-8 sm:py-12 saas-mesh-bg">
         <div className="w-full max-w-lg">
           {/* Breadcrumb Return */}
           <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
@@ -233,7 +233,7 @@ function RoomPageContent() {
           </div>
 
           {/* Passenger Boarding Pass Card */}
-          <div className="glass-panel border border-slate-200/90 rounded-3xl p-5 sm:p-8 shadow-xl relative overflow-hidden glass-specular bg-white/90">
+          <div className="border border-slate-200/90 rounded-3xl p-5 sm:p-8 shadow-xl relative overflow-hidden glass-specular bg-white">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600" />
 
             <div className="flex items-start justify-between border-b border-slate-200/80 pb-4 sm:pb-5 mb-5 sm:mb-6">
@@ -501,8 +501,8 @@ function RoomViewInner({
   // Session Expired Recovery Screen
   if (sessionExpired) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-[#f8fafc] saas-mesh-bg">
-        <div className="text-center max-w-md p-6 sm:p-8 rounded-3xl glass-panel border border-teal-500/30 shadow-2xl glass-specular animate-in fade-in duration-300 bg-white/95">
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-[#f1f5f9] saas-mesh-bg">
+        <div className="text-center max-w-md p-6 sm:p-8 rounded-3xl border border-teal-500/30 shadow-2xl glass-specular animate-in fade-in duration-300 bg-white">
           <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
             ⏳
           </div>
@@ -541,7 +541,7 @@ function RoomViewInner({
   // Connection State: Connecting
   if (connectionState === ConnectionState.Connecting) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-[#f8fafc]">
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-[#f1f5f9]">
         <div className="text-center font-mono p-4">
           <svg className="animate-spin h-10 w-10 text-teal-600 mx-auto mb-4" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -557,8 +557,8 @@ function RoomViewInner({
   // Connection State: Reconnecting
   if (connectionState === ConnectionState.Reconnecting) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-[#f8fafc]">
-        <div className="text-center font-mono max-w-sm p-8 rounded-2xl glass-panel border-teal-500/30 bg-white">
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] bg-[#f1f5f9]">
+        <div className="text-center font-mono max-w-sm p-8 rounded-2xl border border-teal-500/30 bg-white shadow-xl">
           <div className="text-4xl mb-4 animate-bounce">📡</div>
           <p className="text-teal-700 font-bold text-lg mb-1">Reconnecting Signal...</p>
           <p className="text-slate-500 text-xs">Network hiccup detected. LiveKit SFU is restoring your connection.</p>
@@ -570,8 +570,8 @@ function RoomViewInner({
   // Connection State: Disconnected (Recoverable UI)
   if (connectionState === ConnectionState.Disconnected) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-[#f8fafc]">
-        <div className="text-center max-w-md p-8 rounded-2xl glass-panel border border-slate-200/90 shadow-xl bg-white">
+      <div className="flex-1 flex items-center justify-center min-h-[70vh] p-4 bg-[#f1f5f9]">
+        <div className="text-center max-w-md p-8 rounded-2xl border border-slate-200/90 shadow-xl bg-white">
           <div className="text-4xl mb-4">🔌</div>
           <h2 className="text-xl font-bold mb-2 text-slate-900">Platform Disconnected</h2>
           <p className="text-slate-600 text-xs mb-6">
@@ -696,7 +696,7 @@ function RoomViewInner({
         )}
 
         {/* Unified Station Lounge Grid */}
-        <div className="glass-panel glass-specular rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-lg bg-white/85 border-slate-200/90">
+        <div className="glass-specular rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.06)] bg-white border border-slate-200/90">
           <div className="flex items-center justify-between mb-4 sm:mb-6 pb-2.5 sm:pb-3 border-b border-slate-200/80">
             <div className="flex items-center gap-2">
               <span className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 flex items-center gap-1.5">
@@ -719,9 +719,9 @@ function RoomViewInner({
               ))}
             </div>
           ) : (
-            <div className="p-8 rounded-2xl bg-slate-50/70 border border-dashed border-slate-200 text-center">
+            <div className="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center">
               <div className="text-2xl sm:text-3xl mb-2">🚉</div>
-              <p className="text-xs sm:text-sm text-slate-800 font-bold">The lounge is quiet.</p>
+              <p className="text-xs sm:text-sm text-slate-900 font-bold">The lounge is quiet.</p>
               <p className="text-[11px] text-slate-500 mt-1">
                 You are on the platform. Unmute below to begin talking, or share the link to invite friends.
               </p>

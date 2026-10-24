@@ -14,12 +14,12 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
   const displayName = participant.name || participant.identity;
 
   return (
-    <div className="flex flex-col items-center gap-2.5 p-3.5 sm:p-4 rounded-2xl bg-[#0e1320]/80 border border-white/[0.08] hover:border-white/[0.18] transition-all duration-200 shadow-md glass-panel-interactive">
+    <div className="flex flex-col items-center gap-2.5 p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-teal-500/40 transition-all duration-200 shadow-sm hover:shadow-md">
       {/* Avatar Container with speaking pulse */}
       <div
         className={`relative transition-all duration-200 ${
           isSpeaking
-            ? 'ring-4 ring-emerald-400 ring-offset-2 ring-offset-[#07090e] scale-105 shadow-lg shadow-emerald-500/25'
+            ? 'ring-4 ring-emerald-500 ring-offset-2 ring-offset-white scale-105 shadow-lg shadow-emerald-500/20'
             : ''
         }`}
       >
@@ -27,12 +27,12 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
           name={displayName}
           size="md"
           showEyes={true}
-          className="shadow-lg"
+          className="shadow-sm"
         />
 
         {/* Live Mic Indicator badge on avatar */}
         {!isMuted ? (
-          <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-gray-950 text-[10px] font-bold p-1 rounded-full shadow-md">
+          <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-white text-[10px] font-bold p-1 rounded-full shadow-md">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -42,7 +42,7 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
             </svg>
           </span>
         ) : (
-          <span className="absolute -bottom-1 -right-1 bg-white/[0.1] text-gray-400 text-[10px] p-1 rounded-full border border-white/[0.1] shadow-md">
+          <span className="absolute -bottom-1 -right-1 bg-slate-100 text-slate-400 text-[10px] p-1 rounded-full border border-slate-200 shadow-sm">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -57,29 +57,29 @@ export function ParticipantTile({ participant }: ParticipantTileProps) {
       {/* Name & Speaking Visualizer */}
       <div className="flex flex-col items-center gap-1 text-center w-full min-w-0">
         <span
-          className="text-xs sm:text-sm font-bold text-white truncate max-w-[5.5rem] sm:max-w-[7rem] tracking-tight"
+          className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-[5.5rem] sm:max-w-[7rem] tracking-tight"
           title={displayName}
         >
           {displayName}
         </span>
 
         {isSpeaking ? (
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono text-emerald-400">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-mono text-emerald-800 font-bold">
             <div className="flex items-end gap-0.5 h-3">
-              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-1" />
-              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-2" />
-              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-3" />
-              <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-4" />
+              <span className="w-0.5 bg-emerald-600 rounded-full speaking-bar-1" />
+              <span className="w-0.5 bg-emerald-600 rounded-full speaking-bar-2" />
+              <span className="w-0.5 bg-emerald-600 rounded-full speaking-bar-3" />
+              <span className="w-0.5 bg-emerald-600 rounded-full speaking-bar-4" />
             </div>
             <span>Speaking</span>
           </div>
         ) : !isMuted ? (
-          <div className="flex items-center gap-1 text-[10px] font-mono text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center gap-1 text-[10px] font-mono text-emerald-700 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Mic Open</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-[10px] font-mono text-gray-500">
+          <div className="flex items-center gap-1 text-[10px] font-mono text-slate-400 font-medium">
             <span>Muted</span>
           </div>
         )}
