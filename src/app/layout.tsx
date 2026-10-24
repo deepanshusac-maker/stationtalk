@@ -4,6 +4,7 @@ import '@livekit/components-styles';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { IdentityOnboardingModal } from '@/components/IdentityOnboardingModal';
+import { SubscriptionModal } from '@/components/SubscriptionModal';
 
 const sansFont = Plus_Jakarta_Sans({
   variable: '--font-sans',
@@ -46,6 +47,7 @@ export default function RootLayout({
         <Navbar />
         <div className="flex-1 flex flex-col">{children}</div>
         <IdentityOnboardingModal />
+        <SubscriptionModal />
       </body>
     </html>
   );

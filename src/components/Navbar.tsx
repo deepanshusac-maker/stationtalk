@@ -153,6 +153,20 @@ function NavbarContent() {
             </span>
           </div>
 
+          {/* 1:1 Random Connect CTA */}
+          <Link
+            href="/connect"
+            className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 focus:outline-none flex items-center gap-1.5 ${
+              pathname === '/connect'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 hover:bg-indigo-500'
+                : 'glass-pill text-indigo-700 hover:text-indigo-950 hover:border-indigo-300 bg-indigo-50/50'
+            }`}
+          >
+            <span>🎲</span>
+            <span className="hidden sm:inline">1:1 Connect</span>
+            <span className="sm:hidden">1:1</span>
+          </Link>
+
           {/* Stations directory CTA */}
           <Link
             href="/stations"

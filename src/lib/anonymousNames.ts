@@ -32,6 +32,25 @@ export const COMMON_FEMALE_NAMES = [
 export const STORAGE_KEY_NAME = 'stationtalk_display_name';
 export const STORAGE_KEY_GENDER = 'stationtalk_gender';
 export const STORAGE_KEY_ONBOARDED = 'stationtalk_onboarded';
+export const STORAGE_KEY_PREMIUM = 'stationtalk_is_premium';
+
+/**
+ * Checks if current client has StationTalk Premium active.
+ */
+export function isUserPremium(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(STORAGE_KEY_PREMIUM) === 'true';
+}
+
+/**
+ * Updates the client's premium subscription state.
+ */
+export function setUserPremium(premium: boolean): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY_PREMIUM, premium ? 'true' : 'false');
+  window.dispatchEvent(new Event('stationtalk_premium_change'));
+  window.dispatchEvent(new Event('storage'));
+}
 
 /**
  * Generates a random anonymous handle based on selected gender (or random gender if omitted).

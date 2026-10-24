@@ -79,22 +79,22 @@ export default function ArrivalScreen() {
         {/* Primary Call to Action buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-14 w-full max-w-md sm:max-w-none mx-auto">
           <Link
-            href="/stations"
-            className="w-full sm:w-auto px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-sm transition-all duration-200 shadow-[0_10px_25px_-5px_rgba(13,148,136,0.35)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] hover:scale-[1.02] flex items-center justify-center gap-3 group focus:outline-none focus:ring-4 focus:ring-teal-400/40 active:scale-95"
+            href="/connect"
+            className="w-full sm:w-auto px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm transition-all duration-200 shadow-[0_10px_25px_-5px_rgba(79,70,229,0.35)] hover:shadow-[0_15px_30px_-5px_rgba(79,70,229,0.5)] hover:scale-[1.02] flex items-center justify-center gap-2.5 group focus:outline-none focus:ring-4 focus:ring-indigo-400/40 active:scale-95"
           >
-            <span>Hop on a Platform (Start Talking)</span>
-            <span className="group-hover:translate-x-1 transition-transform duration-200 text-base">
-              ➔
+            <span>🎲 1:1 Random Connect</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/80 text-white border border-indigo-400/50">
+              Skip ⏭
             </span>
           </Link>
 
           <Link
-            href="/room/coimbatore-junction"
-            className="w-full sm:w-auto px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl text-slate-800 font-bold text-sm hover:text-slate-950 hover:border-teal-400 flex items-center justify-center gap-2.5 active:scale-95 border border-slate-200/90 bg-white shadow-sm transition-all"
+            href="/stations"
+            className="w-full sm:w-auto px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-sm transition-all duration-200 shadow-[0_10px_25px_-5px_rgba(13,148,136,0.35)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] hover:scale-[1.02] flex items-center justify-center gap-2 group focus:outline-none focus:ring-4 focus:ring-teal-400/40 active:scale-95"
           >
-            <span>Quick Board: Coimbatore Junction</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-teal-800 font-mono border border-slate-200 font-bold">
-              PF 01
+            <span>Explore 26 Stations</span>
+            <span className="group-hover:translate-x-1 transition-transform duration-200 text-base">
+              ➔
             </span>
           </Link>
         </div>

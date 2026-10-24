@@ -57,6 +57,31 @@ export async function createListenerToken(options: TokenOptions): Promise<string
 }
 
 /**
+ * Create a short-lived LiveKit access token for 1:1 random voice rooms.
+ * Max session limit: 10 minutes.
+ */
+export async function createOneOnOneToken(options: TokenOptions): Promise<string> {
+  const apiKey = getEnvOrThrow('LIVEKIT_API_KEY');
+  const apiSecret = getEnvOrThrow('LIVEKIT_API_SECRET');
+
+  const token = new AccessToken(apiKey, apiSecret, {
+    identity: options.participantIdentity,
+    name: options.participantName,
+    ttl: '10m', // 10-minute maximum session token TTL for 1:1
+  });
+
+  token.addGrant({
+    room: options.roomName,
+    roomJoin: true,
+    canPublish: true,
+    canSubscribe: true,
+    canPublishData: true,
+  });
+
+  return await token.toJwt();
+}
+
+/**
  * Get the LiveKit WebSocket URL for the client.
  */
 export function getLiveKitUrl(): string {
