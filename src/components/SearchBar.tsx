@@ -48,7 +48,7 @@ export function SearchBar({ onSearch }: SearchBarProps) {
         value={value}
         onChange={handleChange}
         aria-label="Search stations by name or city"
-        className="w-full pl-10 pr-16 py-2 glass-input rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none"
+        className="w-full pl-10 pr-16 py-2 glass-input rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none"
       />
 
       <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
@@ -56,14 +56,14 @@ export function SearchBar({ onSearch }: SearchBarProps) {
           <button
             onClick={handleClear}
             aria-label="Clear search"
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-slate-400 hover:text-slate-700 transition-colors"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         ) : (
-          <kbd className="hidden sm:inline-block text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-gray-400 border border-white/[0.08]">
+          <kbd className="hidden sm:inline-block text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">
             ⌘K
           </kbd>
         )}

@@ -23,7 +23,7 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
 
   return (
     <div
-      className="p-1 rounded-2xl glass-panel flex items-center gap-1 border border-white/[0.08] overflow-x-auto no-scrollbar max-w-full touch-pan-x"
+      className="p-1 rounded-2xl glass-panel flex items-center gap-1 border border-slate-200/90 bg-white/85 shadow-sm overflow-x-auto no-scrollbar max-w-full touch-pan-x"
       role="radiogroup"
       aria-label="Filter stations by region"
     >
@@ -31,14 +31,14 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
         role="radio"
         aria-checked={selected === null}
         onClick={() => onChange(null)}
-        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 focus:outline-none whitespace-nowrap shrink-0 ${
+        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 focus:outline-none whitespace-nowrap shrink-0 ${
           selected === null
-            ? 'bg-teal-500 text-gray-950 font-bold shadow-[0_0_15px_rgba(20,184,166,0.35)]'
-            : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+            ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/25'
+            : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
         }`}
       >
         <span>All</span>
-        <span className="ml-1 opacity-70 text-[10px]">({getCount()})</span>
+        <span className="ml-1 opacity-75 text-[10px]">({getCount()})</span>
       </button>
 
       {REGIONS.map((region) => {
@@ -51,10 +51,10 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
             role="radio"
             aria-checked={isSelected}
             onClick={() => onChange(region)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 focus:outline-none whitespace-nowrap shrink-0 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 focus:outline-none whitespace-nowrap shrink-0 ${
               isSelected
-                ? 'bg-teal-500 text-gray-950 font-bold shadow-[0_0_15px_rgba(20,184,166,0.35)]'
-                : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+                ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/25'
+                : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
             }`}
           >
             <span>{REGION_LABELS[region]}</span>

@@ -30,7 +30,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: 'cover',
-  themeColor: '#07090e',
+  themeColor: '#f8fafc',
 };
 
 export default function RootLayout({
@@ -39,9 +39,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="light">
       <body
-        className={`${sansFont.variable} ${monoFont.variable} antialiased bg-[#07090e] text-white min-h-screen flex flex-col font-sans selection:bg-teal-500 selection:text-gray-950`}
+        className={`${sansFont.variable} ${monoFont.variable} antialiased bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col font-sans selection:bg-teal-500 selection:text-white`}
       >
         <Navbar />
         <div className="flex-1 flex flex-col">{children}</div>
