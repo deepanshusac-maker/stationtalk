@@ -8,8 +8,8 @@ import {
   useLocalParticipant,
   useParticipants,
   useAudioPlayback,
-  useIsSpeaking,
 } from '@livekit/components-react';
+import { ParticipantEvent, type Participant } from 'livekit-client';
 import { AvatarCapsule } from '@/components/AvatarCapsule';
 import {
   getOrInitAnonymousName,
@@ -94,7 +94,48 @@ type ConnectState =
       targetGender: 'any' | 'female';
     };
 
+/**
+ * Crash-proof speaking detector that handles undefined/null participants gracefully
+ * without throwing "No participant provided" context errors.
+ */
+function useSafeIsSpeaking(participant?: Participant | null): boolean {
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!participant) return () => {};
+      participant.on(ParticipantEvent.IsSpeakingChanged, callback);
+      return () => {
+        participant.off(ParticipantEvent.IsSpeakingChanged, callback);
+      };
+    },
+    [participant]
+  );
+
+  const getSnapshot = useCallback(() => {
+    return participant ? Boolean(participant.isSpeaking) : false;
+  }, [participant]);
+
+  const getServerSnapshot = useCallback(() => false, []);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+function subscribeMounted() {
+  return () => {};
+}
+function getMountedSnapshot() {
+  return true;
+}
+function getServerMountedSnapshot() {
+  return false;
+}
+
 export default function RandomConnectPage() {
+  const isMounted = useSyncExternalStore(
+    subscribeMounted,
+    getMountedSnapshot,
+    getServerMountedSnapshot
+  );
+
   const savedName = useSyncExternalStore(
     subscribeStorage,
     getStoredNameSnapshot,
@@ -122,7 +163,14 @@ export default function RandomConnectPage() {
   const [skipNotice, setSkipNotice] = useState<string | null>(null);
   const [searchSeconds, setSearchSeconds] = useState(0);
 
-  const displayName = savedName || getOrInitAnonymousName(storedGender);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem(STORAGE_KEY_NAME)) {
+      getOrInitAnonymousName();
+      window.dispatchEvent(new Event('stationtalk_name_change'));
+    }
+  }, []);
+
+  const displayName = isMounted ? (savedName || 'Passenger') : 'Passenger';
 
   // Re-roll name
   const handleReroll = useCallback(() => {
@@ -412,7 +460,7 @@ export default function RandomConnectPage() {
                   <div className="text-xs font-mono text-slate-500 uppercase font-bold">
                     Your Persona
                   </div>
-                  <div className="text-sm font-bold text-slate-900 tracking-tight">
+                  <div suppressHydrationWarning className="text-sm font-bold text-slate-900 tracking-tight">
                     {displayName}
                   </div>
                 </div>
@@ -524,8 +572,8 @@ function OneOnOneRoomInner({
   const { localParticipant } = useLocalParticipant();
   const { canPlayAudio, startAudio } = useAudioPlayback();
 
-  const isLocalSpeaking = useIsSpeaking(localParticipant);
-  const isMuted = !localParticipant.isMicrophoneEnabled;
+  const isLocalSpeaking = useSafeIsSpeaking(localParticipant);
+  const isMuted = !localParticipant?.isMicrophoneEnabled;
 
   const [secondsRemaining, setSecondsRemaining] = useState(10 * 60); // 10 minutes max
   const [showReportModal, setShowReportModal] = useState(false);
@@ -552,16 +600,18 @@ function OneOnOneRoomInner({
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
-        localParticipant.setMicrophoneEnabled(isMuted).catch(() => {});
+        localParticipant?.setMicrophoneEnabled(isMuted).catch(() => {});
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [localParticipant, isMuted]);
 
-  // Partner left / skipped check
-  const remoteParticipant = participants.find((p) => p.identity !== localParticipant.identity);
-  const isRemoteSpeaking = useIsSpeaking(remoteParticipant);
+  // Partner left / skipped check (safe identity matching)
+  const remoteParticipant = participants.find(
+    (p) => localParticipant && p.identity !== localParticipant.identity
+  );
+  const isRemoteSpeaking = useSafeIsSpeaking(remoteParticipant);
 
   const prevRemoteRef = useRef(remoteParticipant);
   useEffect(() => {
@@ -573,6 +623,7 @@ function OneOnOneRoomInner({
   }, [remoteParticipant, onPartnerSkipped]);
 
   const toggleMic = useCallback(async () => {
+    if (!localParticipant) return;
     try {
       await localParticipant.setMicrophoneEnabled(isMuted);
     } catch (err) {
