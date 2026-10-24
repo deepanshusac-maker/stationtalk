@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const record = recordSubscription({ peerId, orderId, paymentId });
+  const record = await recordSubscription({ peerId, orderId, paymentId });
 
   return NextResponse.json({
     success: true,

@@ -1,5 +1,6 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import { persistSubscriptionToSupabase, querySubscriptionFromSupabase } from './supabase';
 
 export interface SubscriptionRecord {
   peerId: string;
@@ -120,12 +121,12 @@ export function verifyPaymentSignature(params: {
 /**
  * Records an active subscription for a user.
  */
-export function recordSubscription(params: {
+export async function recordSubscription(params: {
   peerId: string;
   orderId: string;
   paymentId: string;
   amount?: number;
-}): SubscriptionRecord {
+}): Promise<SubscriptionRecord> {
   const store = getStore();
   const now = Date.now();
   const expiresAt = now + 30 * 24 * 60 * 60 * 1000; // 30 days valid
@@ -141,21 +142,47 @@ export function recordSubscription(params: {
   };
 
   store.subscriptions.set(params.peerId, record);
+
+  // Asynchronously persist to Supabase database
+  await persistSubscriptionToSupabase({
+    peerId: params.peerId,
+    orderId: params.orderId,
+    paymentId: params.paymentId,
+    amount: record.amount,
+    expiresAt,
+  }).catch((err) => console.warn('Supabase persist note:', err));
+
   return record;
 }
 
 /**
  * Checks if a given peerId has an active, unexpired subscription.
  */
-export function isSubscriptionActive(peerId: string): boolean {
+export async function isSubscriptionActive(peerId: string): Promise<boolean> {
   const store = getStore();
   const record = store.subscriptions.get(peerId);
-  if (!record) return false;
-
-  if (Date.now() > record.expiresAt) {
-    store.subscriptions.delete(peerId);
-    return false;
+  if (record) {
+    if (Date.now() > record.expiresAt) {
+      store.subscriptions.delete(peerId);
+      return false;
+    }
+    return true;
   }
 
-  return true;
+  // Check Supabase if lambda cold-started
+  const isDbActive = await querySubscriptionFromSupabase(peerId);
+  if (isDbActive) {
+    store.subscriptions.set(peerId, {
+      peerId,
+      orderId: 'db_restored',
+      paymentId: 'db_restored',
+      amount: 9900,
+      currency: 'INR',
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 30 * 86400 * 1000,
+    });
+    return true;
+  }
+
+  return false;
 }

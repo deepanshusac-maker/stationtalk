@@ -59,14 +59,17 @@ describe('Razorpay Subscription Flow', () => {
     delete process.env.RAZORPAY_KEY_SECRET;
   });
 
-  it('records subscription and marks active for 30 days', () => {
-    recordSubscription({
+  it('records subscription and marks active for 30 days', async () => {
+    await recordSubscription({
       peerId: 'peer-abc',
       orderId: 'order-1',
       paymentId: 'pay-1',
     });
 
-    expect(isSubscriptionActive('peer-abc')).toBe(true);
-    expect(isSubscriptionActive('peer-unknown')).toBe(false);
+    const active = await isSubscriptionActive('peer-abc');
+    const inactive = await isSubscriptionActive('peer-unknown');
+
+    expect(active).toBe(true);
+    expect(inactive).toBe(false);
   });
 });
