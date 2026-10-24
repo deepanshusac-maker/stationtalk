@@ -7,6 +7,7 @@ import {
   type Gender,
   type TargetGender,
 } from '@/lib/matchmaker';
+import { isSubscriptionActive } from '@/lib/razorpay';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
@@ -62,15 +63,19 @@ export async function POST(request: NextRequest) {
   // Validate user fields for join and skip
   const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : 'Anonymous';
   const gender: Gender = body.gender === 'female' ? 'female' : 'male';
-  const isPremium = Boolean(body.isPremium);
-  const targetGender: TargetGender = body.targetGender === 'female' ? 'female' : 'any';
+
+  // SEC-01 FIX: Server-side validation of premium status.
+  // Never trust client-supplied body.isPremium.
+  const isActuallyPremium = await isSubscriptionActive(peerId);
+  const targetGender: TargetGender =
+    body.targetGender === 'female' && isActuallyPremium ? 'female' : 'any';
 
   if (action === 'join') {
     const result = await joinOrFindMatch({
       peerId,
       displayName: displayName.slice(0, 50),
       gender,
-      isPremium,
+      isPremium: isActuallyPremium,
       targetGender,
     });
     return NextResponse.json(result);
@@ -80,7 +85,7 @@ export async function POST(request: NextRequest) {
     const result = await skipCurrentMatch(peerId, {
       displayName: displayName.slice(0, 50),
       gender,
-      isPremium,
+      isPremium: isActuallyPremium,
       targetGender,
     });
     return NextResponse.json(result);

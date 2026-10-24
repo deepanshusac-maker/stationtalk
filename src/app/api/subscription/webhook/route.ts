@@ -24,7 +24,10 @@ export async function POST(request: NextRequest) {
     .update(rawBody)
     .digest('hex');
 
-  if (expectedSignature !== signature) {
+  // SEC-05 FIX: Constant-time comparison to prevent timing side-channel attacks
+  const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+  const providedBuf = Buffer.from(signature, 'utf8');
+  if (expectedBuf.length !== providedBuf.length || !crypto.timingSafeEqual(expectedBuf, providedBuf)) {
     console.warn('Invalid Razorpay webhook signature attempt.');
     return NextResponse.json({ error: 'Signature mismatch.' }, { status: 400 });
   }

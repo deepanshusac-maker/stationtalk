@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyPaymentSignature, recordSubscription } from '@/lib/razorpay';
+import { verifyPaymentSignature, recordSubscription, isPaymentAlreadyClaimed } from '@/lib/razorpay';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
@@ -36,6 +36,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: 'Missing required payment verification fields.' },
       { status: 400 }
+    );
+  }
+
+  // SEC-03 FIX: Prevent payment signature reuse/replay across different peerIds
+  if (isPaymentAlreadyClaimed(paymentId, peerId)) {
+    return NextResponse.json(
+      { error: 'This payment transaction has already been redeemed.' },
+      { status: 409 }
     );
   }
 

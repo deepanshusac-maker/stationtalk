@@ -14,6 +14,7 @@ export interface SubscriptionRecord {
 
 interface SubscriptionStore {
   subscriptions: Map<string, SubscriptionRecord>; // peerId -> record
+  claimedPaymentIds: Set<string>; // paymentId -> prevents replay across multiple peerIds
 }
 
 declare global {
@@ -24,7 +25,11 @@ function getStore(): SubscriptionStore {
   if (!globalThis.__stationtalk_subscriptions) {
     globalThis.__stationtalk_subscriptions = {
       subscriptions: new Map(),
+      claimedPaymentIds: new Set(),
     };
+  }
+  if (!globalThis.__stationtalk_subscriptions.claimedPaymentIds) {
+    globalThis.__stationtalk_subscriptions.claimedPaymentIds = new Set();
   }
   return globalThis.__stationtalk_subscriptions;
 }
@@ -93,7 +98,7 @@ export async function createSubscriptionOrder(params: {
 }
 
 /**
- * Verifies Razorpay payment signature using HMAC SHA256.
+ * Verifies Razorpay payment signature using constant-time HMAC SHA256 comparison.
  */
 export function verifyPaymentSignature(params: {
   orderId: string;
@@ -103,8 +108,8 @@ export function verifyPaymentSignature(params: {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keySecret) {
-    // If running in sandbox/test mode without credentials, allow mock orders
-    if (params.orderId.startsWith('order_mock_')) {
+    // SEC-04 FIX: Mock sandbox orders allowed ONLY during automated unit tests
+    if (process.env.NODE_ENV === 'test' && params.orderId.startsWith('order_mock_')) {
       return true;
     }
     return false;
@@ -115,7 +120,27 @@ export function verifyPaymentSignature(params: {
     .update(`${params.orderId}|${params.paymentId}`)
     .digest('hex');
 
-  return generatedSignature === params.signature;
+  // SEC-05 FIX: Constant-time comparison to prevent timing side-channel attacks
+  const expectedBuf = Buffer.from(generatedSignature, 'utf8');
+  const providedBuf = Buffer.from(params.signature, 'utf8');
+  if (expectedBuf.length !== providedBuf.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(expectedBuf, providedBuf);
+}
+
+/**
+ * Checks if a payment ID has already been redeemed by another peerId (replay prevention).
+ */
+export function isPaymentAlreadyClaimed(paymentId: string, currentPeerId: string): boolean {
+  const store = getStore();
+  // Check if claimed by another peer in memory
+  for (const record of store.subscriptions.values()) {
+    if (record.paymentId === paymentId && record.peerId !== currentPeerId) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -128,6 +153,7 @@ export async function recordSubscription(params: {
   amount?: number;
 }): Promise<SubscriptionRecord> {
   const store = getStore();
+  store.claimedPaymentIds.add(params.paymentId);
   const now = Date.now();
   const expiresAt = now + 30 * 24 * 60 * 60 * 1000; // 30 days valid
 

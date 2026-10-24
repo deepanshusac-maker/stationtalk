@@ -3,6 +3,7 @@ import {
   verifyPaymentSignature,
   recordSubscription,
   isSubscriptionActive,
+  isPaymentAlreadyClaimed,
 } from '@/lib/razorpay';
 import crypto from 'crypto';
 
@@ -10,6 +11,7 @@ describe('Razorpay Subscription Flow', () => {
   beforeEach(() => {
     globalThis.__stationtalk_subscriptions = {
       subscriptions: new Map(),
+      claimedPaymentIds: new Set(),
     };
   });
 
@@ -20,7 +22,7 @@ describe('Razorpay Subscription Flow', () => {
     expect(order.currency).toBe('INR');
   });
 
-  it('verifies signature correctly with mock sandbox orders', () => {
+  it('verifies signature correctly with mock sandbox orders in test env', () => {
     const isValid = verifyPaymentSignature({
       orderId: 'order_mock_12345',
       paymentId: 'pay_mock_12345',
@@ -71,5 +73,19 @@ describe('Razorpay Subscription Flow', () => {
 
     expect(active).toBe(true);
     expect(inactive).toBe(false);
+  });
+
+  it('detects and prevents payment ID replay across different peerIds', async () => {
+    await recordSubscription({
+      peerId: 'alice-peer-id',
+      orderId: 'order-100',
+      paymentId: 'pay-shared-999',
+    });
+
+    // Same peerId querying their own payment is allowed
+    expect(isPaymentAlreadyClaimed('pay-shared-999', 'alice-peer-id')).toBe(false);
+
+    // Another peerId attempting to claim the same payment ID is blocked
+    expect(isPaymentAlreadyClaimed('pay-shared-999', 'bob-attacker-id')).toBe(true);
   });
 });
