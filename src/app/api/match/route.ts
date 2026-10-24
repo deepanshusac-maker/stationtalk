@@ -15,9 +15,25 @@ export async function POST(request: NextRequest) {
     request.headers.get('x-real-ip') ||
     'unknown';
 
-  // Allow up to 60 requests per minute for active polling/skipping
-  const rateLimitResult = checkRateLimit(ip, {
-    maxRequests: 60,
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
+  }
+
+  const action = body.action as string;
+  const peerId = (body.peerId as string)?.trim();
+
+  if (!peerId || typeof peerId !== 'string' || peerId.length < 5 || peerId.length > 100) {
+    return NextResponse.json({ error: 'Invalid or missing peerId.' }, { status: 400 });
+  }
+
+  // Key rate limiting by IP + peerId so multiple test tabs or users on the same WiFi
+  // never block or throttle each other.
+  const rateLimitKey = `${ip}:${peerId}`;
+  const rateLimitResult = checkRateLimit(rateLimitKey, {
+    maxRequests: 120, // 120 requests per minute per peer
     windowMs: 60_000,
   });
 
@@ -31,20 +47,6 @@ export async function POST(request: NextRequest) {
         },
       }
     );
-  }
-
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
-  }
-
-  const action = body.action as string;
-  const peerId = (body.peerId as string)?.trim();
-
-  if (!peerId || typeof peerId !== 'string' || peerId.length < 5 || peerId.length > 100) {
-    return NextResponse.json({ error: 'Invalid or missing peerId.' }, { status: 400 });
   }
 
   if (action === 'poll') {

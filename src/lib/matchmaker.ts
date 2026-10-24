@@ -104,26 +104,13 @@ export async function joinOrFindMatch(user: {
   const store = getStore();
   cleanupStaleEntries(store);
 
-  // If user already has an active, non-skipped match, return it
-  const existingMatch = store.activeMatches.get(user.peerId);
-  if (existingMatch && !existingMatch.partnerSkippedBy) {
-    const isUserA = existingMatch.userA.peerId === user.peerId;
-    const current = isUserA ? existingMatch.userA : existingMatch.userB;
-    const partner = isUserA ? existingMatch.userB : existingMatch.userA;
-    return {
-      status: 'matched',
-      roomName: existingMatch.roomName,
-      token: current.token,
-      partner: {
-        name: partner.displayName,
-        gender: partner.gender,
-      },
-      livekitUrl: getLiveKitUrl(),
-    };
+  // Always delete any old match or queue entry for this user when they explicitly start a new search
+  const oldMatch = store.activeMatches.get(user.peerId);
+  if (oldMatch) {
+    oldMatch.partnerSkippedBy = user.peerId;
+    store.activeMatches.delete(user.peerId);
   }
-
-  // Remove any stale match for this user
-  store.activeMatches.delete(user.peerId);
+  store.waitingQueue.delete(user.peerId);
 
   const currentUser: QueueUser = {
     ...user,

@@ -59,18 +59,20 @@ function getServerBoolSnapshot(): boolean {
   return false;
 }
 
+let tabInstancePeerId: string | null = null;
+
 function subscribePeerId() {
   return () => {};
 }
 
 function getPeerIdSnapshot(): string {
   if (typeof window === 'undefined') return '';
-  let id = sessionStorage.getItem('stationtalk_peer_id');
-  if (!id) {
-    id = `peer-${Math.random().toString(36).substring(2, 11)}-${Date.now().toString(36)}`;
-    sessionStorage.setItem('stationtalk_peer_id', id);
+  if (!tabInstancePeerId) {
+    // Generate an absolute unique peer ID per tab instance so that
+    // duplicated tabs or multi-tab testing never share the same ID.
+    tabInstancePeerId = `peer-${Math.random().toString(36).substring(2, 9)}-${Date.now().toString(36).substring(4)}`;
   }
-  return id;
+  return tabInstancePeerId;
 }
 
 function getServerPeerIdSnapshot(): string {
@@ -162,6 +164,7 @@ export default function RandomConnectPage() {
   const [selectedTarget, setSelectedTarget] = useState<'any' | 'female'>('any');
   const [skipNotice, setSkipNotice] = useState<string | null>(null);
   const [searchSeconds, setSearchSeconds] = useState(0);
+  const [queueSize, setQueueSize] = useState<number>(1);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem(STORAGE_KEY_NAME)) {
@@ -219,6 +222,8 @@ export default function RandomConnectPage() {
             partner: data.partner,
             targetGender: target,
           });
+        } else if (data.status === 'waiting' && typeof data.queueSize === 'number') {
+          setQueueSize(data.queueSize);
         }
       } catch (err) {
         console.error('Error starting search:', err);
@@ -258,6 +263,36 @@ export default function RandomConnectPage() {
               partner: data.partner,
               targetGender: connectState.targetGender,
             });
+          } else if (data.status === 'waiting' && typeof data.queueSize === 'number') {
+            setQueueSize(data.queueSize);
+          } else if (data.status === 'idle') {
+            // Cold-start / eviction recovery: re-announce presence
+            fetch('/api/match', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'join',
+                peerId,
+                displayName,
+                gender: storedGender,
+                isPremium,
+                targetGender: connectState.targetGender,
+              }),
+            })
+              .then((r) => r.json())
+              .then((rejoin) => {
+                if (rejoin.status === 'matched') {
+                  setConnectState({
+                    status: 'connected',
+                    roomName: rejoin.roomName,
+                    token: rejoin.token,
+                    livekitUrl: rejoin.livekitUrl,
+                    partner: rejoin.partner,
+                    targetGender: connectState.targetGender,
+                  });
+                }
+              })
+              .catch(() => {});
           }
         }
       } catch (err) {
@@ -269,7 +304,7 @@ export default function RandomConnectPage() {
       clearInterval(timer);
       clearInterval(pollInterval);
     };
-  }, [connectState, peerId]);
+  }, [connectState, peerId, displayName, storedGender, isPremium]);
 
   // Cancel search
   const handleCancelSearch = useCallback(async () => {
@@ -511,9 +546,20 @@ export default function RandomConnectPage() {
                 ? 'Finding a Female Passenger...'
                 : 'Searching for a Traveler...'}
             </h2>
-            <p className="text-xs text-slate-500 mb-6 font-mono">
+            <p className="text-xs text-slate-500 mb-2 font-mono">
               Checking waiting queues across Indian platforms ({searchSeconds}s)
             </p>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-[11px] font-mono font-bold mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-ping" />
+              <span>{queueSize <= 1 ? '1 passenger waiting in queue' : `${queueSize} passengers waiting in queue`}</span>
+            </div>
+
+            {connectState.targetGender === 'female' && (
+              <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl mb-4 text-[11px] text-amber-800 font-medium">
+                👩 Girls-Only Filter is active. Waiting for a female co-passenger to connect.
+              </div>
+            )}
 
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl mb-6 text-xs text-slate-600 font-medium">
               💡 Tip: Make sure your microphone is enabled. You can skip anytime during the chat.
