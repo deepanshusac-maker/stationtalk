@@ -54,36 +54,35 @@ export default function ArrivalScreen() {
       </div>
 
       {/* Main SaaS Hero Section */}
-      <main className="max-w-5xl mx-auto px-4 py-8 sm:py-16 md:py-20 text-center my-auto relative z-10 w-full">
-        {/* Terminal Announcement Badge */}
-        <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full glass-pill text-teal-800 text-[10px] sm:text-xs font-mono font-semibold mb-6 sm:mb-8 shadow-sm max-w-full truncate border-teal-200/80 bg-white/90">
+      <main className="max-w-5xl mx-auto px-4 py-8 sm:py-14 md:py-16 text-center my-auto relative z-10 w-full">
+        {/* Anonymity & Freedom Announcement Badge */}
+        <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-teal-800 text-[10px] sm:text-xs font-mono font-semibold mb-6 sm:mb-8 shadow-sm max-w-full truncate border border-teal-200/90 bg-white">
           <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse shrink-0" />
-          <span className="truncate">STATION-BASED GROUP VOICE ROOMS</span>
+          <span className="truncate">100% ANONYMOUS SOCIAL AUDIO • ZERO LOGINS • NO TRACE</span>
           <span className="text-slate-300 hidden sm:inline">•</span>
-          <span className="text-slate-500 hidden sm:inline">LIVEKIT CLOUD SFU</span>
+          <span className="text-slate-500 hidden sm:inline">26 HUBS LIVE</span>
         </div>
 
         {/* Hero Title */}
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tight text-slate-950 mb-4 sm:mb-6 leading-[1.12]">
-          Step Onto the <br />
+          Talk Freely. Stay Anonymous. <br />
           <span className="bg-gradient-to-r from-teal-600 via-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-            Audio Platform.
+            Vibe Without Judgment.
           </span>
         </h1>
 
         {/* Subhead */}
         <p className="text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal px-2">
-          Welcome to <strong className="text-slate-900 font-bold">StationTalk</strong> — a modern social audio network.
-          Drop into any station room, listen in crystal-clear WebRTC audio, and speak up by simply unmuting with complete anonymous privacy.
+          Step into any railway station voice lounge to talk about your day, share a laugh, debate late-night thoughts, or just listen in peace. <strong className="text-slate-900 font-bold">No accounts, no phone numbers, and no profiles</strong> — just real human voices.
         </p>
 
         {/* Primary Call to Action buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 w-full max-w-md sm:max-w-none mx-auto">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8 sm:mb-10 w-full max-w-md sm:max-w-none mx-auto">
           <Link
             href="/stations"
             className="w-full sm:w-auto px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-sm transition-all duration-200 shadow-[0_10px_25px_-5px_rgba(13,148,136,0.35)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] hover:scale-[1.02] flex items-center justify-center gap-3 group focus:outline-none focus:ring-4 focus:ring-teal-400/40 active:scale-95"
           >
-            <span>Explore All 26 Platforms</span>
+            <span>Hop on a Platform (Start Talking)</span>
             <span className="group-hover:translate-x-1 transition-transform duration-200 text-base">
               ➔
             </span>
@@ -100,36 +99,100 @@ export default function ArrivalScreen() {
           </Link>
         </div>
 
-        {/* 3 World-Class SaaS Feature Panels */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 text-left">
+        {/* Zero Friction Guarantees Strip */}
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-mono text-slate-500 mb-12 sm:mb-16">
+          <span className="flex items-center gap-1.5">
+            <span className="text-teal-600 font-bold">✓</span>
+            <span>No sign-up or phone number</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-teal-600 font-bold">✓</span>
+            <span>Auto-generated anonymous handle</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-teal-600 font-bold">✓</span>
+            <span>15-min relaxed sessions</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-teal-600 font-bold">✓</span>
+            <span>Open mic (Unmute to talk)</span>
+          </span>
+        </div>
+
+        {/* 3 Core Value Panels */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 text-left mb-12 sm:mb-16">
           <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-teal-200/80 shadow-sm">
-              🧭
+              🎭
             </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">26 Regional Hubs</h3>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Zero Identity Attached</h3>
             <p className="text-xs text-slate-600 leading-relaxed font-normal">
-              Travel across South, North, East, West, and Central corridors. Each station hosts a distinct regional vibe and open discussions.
+              No profiles, photos, or history. Pick Male or Female once to receive a random transit moniker like <em>Rohan</em> or <em>Ananya</em>. Re-roll with 🎲 anytime. Say what you really feel.
             </p>
           </div>
 
           <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-indigo-200/80 shadow-sm">
-              🎭
+              ⏱️
             </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Anonymous Personas</h3>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">15-Min Platform Chats</h3>
             <p className="text-xs text-slate-600 leading-relaxed font-normal">
-              No sign-up or real names required. Express yourself freely with auto-generated transit monikers and 1-click 🎲 identity re-rolling.
+              Just like a memorable conversation with a fellow traveler waiting for a train. Sessions end at 15 minutes, so discussions stay fresh, energetic, and never drag out awkwardly.
             </p>
           </div>
 
           <div className="p-5 sm:p-6 rounded-3xl border border-slate-200/90 bg-white shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_24px_-4px_rgba(13,148,136,0.12)] hover:border-teal-500/40 transition-all duration-200 glass-specular">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl mb-3 sm:mb-4 border border-emerald-200/80 shadow-sm">
-              ⚡
+              🎙️
             </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Sub-100ms SFU Mesh</h3>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight">Open Mic Freedom</h3>
             <p className="text-xs text-slate-600 leading-relaxed font-normal">
-              Powered by LiveKit Cloud. High-fidelity Opus audio, 15-minute dynamic session boundaries, and support for hundreds of simultaneous listeners.
+              No speaker vs listener hierarchies or waiting for stage permission. Want to chime in? Just unmute your mic. Prefer to relax and listen? You&apos;re always welcome to just vibe.
             </p>
+          </div>
+        </div>
+
+        {/* How It Works - 3 Easy Steps */}
+        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] text-left glass-specular">
+          <div className="text-center max-w-md mx-auto mb-6">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-teal-800 bg-teal-50 border border-teal-200/80 px-2.5 py-0.5 rounded-full font-bold">
+              HOW IT WORKS
+            </span>
+            <h2 className="text-lg sm:text-2xl font-black text-slate-950 mt-2 tracking-tight">
+              3 Steps to Start Talking in 10 Seconds
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <span className="w-7 h-7 rounded-xl bg-teal-600 text-white font-mono font-bold text-xs flex items-center justify-center mb-3">
+                1
+              </span>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 mb-1">Pick Any Station</h4>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Browse 26 railway platform voice lounges across South, North, East, West, and Central India.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <span className="w-7 h-7 rounded-xl bg-indigo-600 text-white font-mono font-bold text-xs flex items-center justify-center mb-3">
+                2
+              </span>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 mb-1">Get Your Handle</h4>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Choose Male or Female style once. You immediately get a random Indian traveler moniker.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <span className="w-7 h-7 rounded-xl bg-emerald-600 text-white font-mono font-bold text-xs flex items-center justify-center mb-3">
+                3
+              </span>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 mb-1">Unmute & Talk</h4>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Unmute your mic whenever you want to speak. When your 15m journey ends, you leave without a trace.
+              </p>
+            </div>
           </div>
         </div>
       </main>
