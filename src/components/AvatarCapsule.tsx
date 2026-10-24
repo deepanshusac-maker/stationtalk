@@ -50,16 +50,16 @@ export function AvatarCapsule({
 
   return (
     <div
-      className={`relative inline-flex flex-col items-center justify-center font-bold shadow-md select-none transition-transform duration-200 hover:scale-105 ${palette.bg} ${palette.text} ${sizeClasses} ${className}`}
+      className={`relative inline-flex flex-col items-center justify-center font-bold shadow-[0_4px_12px_rgba(0,0,0,0.35)] ring-1 ring-white/15 select-none transition-transform duration-200 hover:scale-110 ${palette.bg} ${palette.text} ${sizeClasses} ${className}`}
       title={name}
     >
       {hasEyes ? (
-        <div className="flex items-center gap-0.5 opacity-80">
+        <div className="flex items-center gap-0.5 opacity-85">
           <span className="w-1 h-2 rounded-full bg-current inline-block transform -rotate-6" />
           <span className="w-1 h-2 rounded-full bg-current inline-block transform rotate-6" />
         </div>
       ) : (
-        <span className="font-semibold tracking-tight">{initial}</span>
+        <span className="font-bold tracking-tight">{initial}</span>
       )}
     </div>
   );
@@ -82,8 +82,8 @@ export function AvatarCluster({ names, totalCount, size = 'md' }: AvatarClusterP
     return (
       <div className="w-16 h-12 flex items-center justify-end pr-2">
         <div
-          className="w-7 h-8.5 rounded-[12px] border border-dashed border-[#293448] flex flex-col items-center justify-center text-gray-500 text-xs font-semibold group-hover:border-teal-400/50 group-hover:text-teal-300 transition-colors"
-          title="Empty room — tap to join"
+          className="w-7 h-8.5 rounded-[12px] border border-dashed border-white/15 bg-white/[0.02] flex flex-col items-center justify-center text-gray-500 text-xs font-semibold group-hover:border-teal-400/50 group-hover:text-teal-300 group-hover:bg-teal-500/10 transition-all duration-200"
+          title="Empty platform — tap to join"
         >
           <span>+</span>
         </div>

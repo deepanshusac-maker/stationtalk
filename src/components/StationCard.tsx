@@ -26,50 +26,68 @@ export function StationCard({
 
   let speakingText = '';
   if (realCount === 0) {
-    speakingText = 'Waiting for discussion · Tap to join';
+    speakingText = 'Waiting for travelers';
   } else if (realCount === 1) {
-    speakingText = `${primarySpeaker || '1 person'} on stage`;
+    speakingText = `${primarySpeaker || '1 traveler'} on stage`;
   } else {
-    speakingText = `${primarySpeaker || '1 person'} +${moreCount} more`;
+    speakingText = `${primarySpeaker || 'Traveler'} +${moreCount} more`;
   }
 
   return (
     <Link
       href={`/room/${station.slug}`}
-      className="group relative flex items-center justify-between p-5 sm:p-6 bg-[#131926] hover:bg-[#182234] border border-[#212b3c] hover:border-[#303f56] rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-teal-500/5 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
+      className="group relative flex items-center justify-between p-5 sm:p-6 glass-panel-interactive glass-specular rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-teal-400/50"
     >
+      {/* Ambient background glow on hover */}
+      <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-teal-500/10 via-transparent to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
       {/* Left Column: Details & Real Joined Count */}
-      <div className="flex-1 min-w-0 pr-3">
+      <div className="relative flex-1 min-w-0 pr-3 z-10">
+        {/* Region & Line Micro Tag */}
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-teal-400/90 font-semibold">
+            {station.region} Corridor
+          </span>
+          <span className="text-gray-600 text-xs">•</span>
+          <span className="text-[10px] font-mono text-gray-400 truncate">
+            {station.city} · {station.state}
+          </span>
+        </div>
+
         {/* Station Name */}
-        <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-teal-300 transition-colors truncate">
+        <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-teal-300 transition-colors truncate tracking-tight">
           {station.name}
         </h3>
 
-        {/* Location: City · State */}
-        <p className="text-xs text-gray-400 mt-0.5 truncate">
-          {station.city} · {station.state}
-        </p>
+        {/* Active speaker snippet + Live decibel bar when active */}
+        <div className="mt-3.5 flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            {realCount > 0 && (
+              <div className="flex items-end gap-0.5 h-3 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-1" />
+                <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-2" />
+                <span className="w-0.5 bg-emerald-400 rounded-full speaking-bar-3" />
+              </div>
+            )}
+            <p
+              className={`text-xs font-medium truncate ${
+                realCount > 0 ? 'text-gray-200' : 'text-gray-400'
+              }`}
+            >
+              {speakingText}
+            </p>
+          </div>
 
-        {/* Active speaker snippet */}
-        <div className="mt-3.5 sm:mt-4">
-          <p
-            className={`text-xs font-medium truncate ${
-              realCount > 0 ? 'text-gray-200' : 'text-gray-400'
-            }`}
-          >
-            {speakingText}
-          </p>
-
-          {/* Real Live Presence indicator */}
-          <div className="mt-1 flex items-center gap-1.5 text-xs font-mono">
+          {/* Real Live Presence indicator with radar ring */}
+          <div className="flex items-center gap-1.5 text-xs font-mono">
             {realCount > 0 ? (
               <>
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  <span className="radar-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                 </span>
-                <span className="text-emerald-400 font-medium">live</span>
-                <span className="text-gray-300 font-semibold">
+                <span className="text-emerald-400 font-semibold">live</span>
+                <span className="text-gray-300 font-medium">
                   {realCount}/7 {realCount === 1 ? 'person' : 'people'}
                   {isFull && ' · full'}
                 </span>
@@ -78,7 +96,7 @@ export function StationCard({
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-gray-600 inline-block" />
                 <span className="text-gray-500 font-normal">
-                  0/7 people · quiet
+                  0/7 joined · quiet
                 </span>
               </>
             )}
@@ -86,13 +104,19 @@ export function StationCard({
         </div>
       </div>
 
-      {/* Right Column: Real Joined Avatars */}
-      <div className="shrink-0 flex items-center justify-end">
+      {/* Right Column: Real Joined Avatars + Smooth Hover Arrow */}
+      <div className="relative shrink-0 flex items-center gap-3 z-10">
         <AvatarCluster
           names={activeNames}
           totalCount={realCount}
           size="md"
         />
+
+        <div className="hidden sm:flex w-7 h-7 rounded-full bg-white/[0.04] border border-white/[0.08] items-center justify-center text-gray-400 group-hover:text-teal-300 group-hover:bg-teal-500/10 group-hover:border-teal-400/30 group-hover:translate-x-0.5 transition-all duration-200">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
       </div>
     </Link>
   );

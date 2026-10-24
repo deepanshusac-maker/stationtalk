@@ -23,7 +23,7 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
 
   return (
     <div
-      className="flex flex-wrap items-center gap-1.5"
+      className="p-1 rounded-2xl glass-panel flex flex-wrap items-center gap-1 border border-white/[0.08]"
       role="radiogroup"
       aria-label="Filter stations by region"
     >
@@ -31,13 +31,14 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
         role="radio"
         aria-checked={selected === null}
         onClick={() => onChange(null)}
-        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all focus:outline-none ${
+        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 focus:outline-none ${
           selected === null
-            ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-sm'
-            : 'bg-[#131926] border border-[#212b3c] text-gray-400 hover:text-gray-200'
+            ? 'bg-teal-500 text-gray-950 font-bold shadow-[0_0_15px_rgba(20,184,166,0.35)]'
+            : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
         }`}
       >
-        <span>All ({getCount()})</span>
+        <span>All</span>
+        <span className="ml-1 opacity-70 text-[10px]">({getCount()})</span>
       </button>
 
       {REGIONS.map((region) => {
@@ -50,10 +51,10 @@ export function RegionFilter({ selected, onChange }: RegionFilterProps) {
             role="radio"
             aria-checked={isSelected}
             onClick={() => onChange(region)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all focus:outline-none ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 focus:outline-none ${
               isSelected
-                ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-sm'
-                : 'bg-[#131926] border border-[#212b3c] text-gray-400 hover:text-gray-200'
+                ? 'bg-teal-500 text-gray-950 font-bold shadow-[0_0_15px_rgba(20,184,166,0.35)]'
+                : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
             }`}
           >
             <span>{REGION_LABELS[region]}</span>

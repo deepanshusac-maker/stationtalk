@@ -44,24 +44,30 @@ export function SearchBar({ onSearch }: SearchBarProps) {
 
       <input
         type="text"
-        placeholder="Search station, city, or state..."
+        placeholder="Filter by station, city, or line..."
         value={value}
         onChange={handleChange}
         aria-label="Search stations by name or city"
-        className="w-full pl-10 pr-10 py-2 bg-[#131926] border border-[#212b3c] rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-teal-400/80 transition-all"
+        className="w-full pl-10 pr-16 py-2 glass-input rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none"
       />
 
-      {value && (
-        <button
-          onClick={handleClear}
-          aria-label="Clear search"
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      )}
+      <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
+        {value ? (
+          <button
+            onClick={handleClear}
+            aria-label="Clear search"
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        ) : (
+          <kbd className="hidden sm:inline-block text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-gray-400 border border-white/[0.08]">
+            ⌘K
+          </kbd>
+        )}
+      </div>
     </div>
   );
 }

@@ -558,19 +558,20 @@ function RoomViewInner({
   }
 
   return (
-    <div className="flex-1 flex flex-col justify-between bg-[#0b0f17]">
+    <div className="flex-1 flex flex-col justify-between saas-mesh-bg saas-dots-pattern min-h-[calc(100vh-4rem)]">
       {/* Top Station Header & Status Bar */}
-      <header className="bg-[#0e1420]/90 border-b border-[#1b2333] px-4 py-3 backdrop-blur-md sticky top-16 z-40">
+      <header className="bg-[#07090e]/75 backdrop-blur-2xl border-b border-white/[0.07] px-4 py-3 sticky top-16 z-40 glass-specular">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[#161d2b] text-teal-300 border border-[#232d42]">
+            <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full glass-pill text-teal-300">
               PF {platformNumber}
             </span>
             <div>
               <h1 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <span>{station.name}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  ● ON AIR
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>ON AIR</span>
                 </span>
               </h1>
               <p className="text-[11px] font-mono text-gray-400">
@@ -583,7 +584,7 @@ function RoomViewInner({
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg bg-[#161d2b] border border-[#232d42] hover:bg-[#1f293d] text-xs font-mono text-gray-300 transition-all flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400"
+              className="px-3.5 py-1.5 rounded-xl glass-pill text-xs font-mono text-gray-300 hover:text-white transition-all flex items-center gap-1.5 focus:outline-none"
               title="Copy room link to invite listeners"
             >
               {copied ? (
@@ -601,7 +602,7 @@ function RoomViewInner({
 
             <Link
               href="/stations"
-              className="px-3 py-1.5 rounded-lg bg-[#161d2b] border border-[#232d42] hover:bg-[#1f293d] text-xs font-mono text-gray-400 transition-colors"
+              className="px-3.5 py-1.5 rounded-xl glass-pill text-xs font-mono text-gray-400 hover:text-white transition-colors"
             >
               Concourse
             </Link>
@@ -610,10 +611,10 @@ function RoomViewInner({
       </header>
 
       {/* Main Room Stage */}
-      <main className="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
+      <main className="max-w-5xl mx-auto px-4 py-8 flex-1 w-full relative z-10">
         {/* Browser Autoplay Policy Warning */}
         {!canPlayAudio && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div className="mb-6 p-4 rounded-3xl glass-panel border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <div className="flex items-center gap-2.5">
               <span className="text-2xl">🔊</span>
               <div>
@@ -635,56 +636,58 @@ function RoomViewInner({
         )}
 
         {/* Stage Speakers Section */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#1b2333]">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold font-mono tracking-wider text-teal-400 uppercase">
-                🎙️ Stage Speakers
+        <div className="mb-8 glass-panel glass-specular rounded-3xl p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2.5">
+              <span className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+                <span>🎙️</span>
+                <span>Stage Speakers</span>
               </span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
-                {speakers.length} / 7 Max
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/25">
+                {speakers.length} / 7 Cap
               </span>
             </div>
-            <span className="text-[11px] font-mono text-gray-500">
-              Broadcasting Live via WebRTC
+            <span className="text-[11px] font-mono text-gray-400 hidden sm:inline-block">
+              WebRTC Opus Mesh
             </span>
           </div>
 
           {speakers.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               {speakers.map((p) => (
                 <ParticipantTile key={p.identity} participant={p} />
               ))}
             </div>
           ) : (
-            <div className="p-8 rounded-2xl bg-[#131926] border border-dashed border-[#212b3c] text-center">
+            <div className="p-8 rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.08] text-center">
               <div className="text-3xl mb-2">🎙️</div>
-              <p className="text-sm text-gray-400 font-medium">The stage is currently open.</p>
+              <p className="text-sm text-gray-300 font-medium">The stage is currently open.</p>
               <p className="text-xs text-gray-500 mt-1">
-                Nobody is on the microphone right now. Click below to take the stage and speak!
+                Nobody is on the microphone right now. Take the stage below to begin speaking!
               </p>
             </div>
           )}
         </div>
 
         {/* Platform Listeners / Audience Section */}
-        <div>
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#1b2333]">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold font-mono tracking-wider text-gray-300 uppercase">
-                🎧 Concourse Audience
+        <div className="glass-panel glass-specular rounded-3xl p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2.5">
+              <span className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+                <span>🎧</span>
+                <span>Concourse Audience</span>
               </span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-[#161d2b] text-gray-400 border border-[#232d42]">
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-gray-400 border border-white/[0.08]">
                 {listeners.length} Listening
               </span>
             </div>
-            <span className="text-[11px] font-mono text-gray-500">
+            <span className="text-[11px] font-mono text-gray-500 hidden sm:inline-block">
               Listen-only travellers
             </span>
           </div>
 
           {listeners.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               {listeners.map((p) => (
                 <ParticipantTile key={p.identity} participant={p} />
               ))}
@@ -699,8 +702,8 @@ function RoomViewInner({
 
       {/* Mic error notice */}
       {micError && (
-        <div className="max-w-5xl mx-auto px-4 mb-3 w-full">
-          <div className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 text-xs font-mono flex items-center justify-between gap-3">
+        <div className="max-w-3xl mx-auto px-4 mb-3 w-full">
+          <div className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-2xl text-red-300 text-xs font-mono flex items-center justify-between gap-3 shadow-lg">
             <span>⚠️ {micError}</span>
             <button
               onClick={() => setMicError(null)}
@@ -713,61 +716,56 @@ function RoomViewInner({
         </div>
       )}
 
-      {/* Sticky Bottom Controls */}
-      <footer className="border-t border-[#1b2333] bg-[#0e1420]/95 backdrop-blur-md py-4 sticky bottom-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 flex flex-col items-center gap-3">
-          {/* Main Primary Microphone / Speak Action */}
-          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-[#131926] border border-[#212b3c]">
-            <div className="flex items-center gap-2.5 text-center sm:text-left">
-              <span className="text-lg">
-                {isCanPublish ? '🎙️' : '🎧'}
-              </span>
-              <div>
-                <div className="text-xs font-bold text-white">
-                  {isCanPublish ? 'You are a Speaker on Stage' : 'You are currently Listening'}
-                </div>
-                <div className="text-[11px] text-gray-400">
-                  {isCanPublish
-                    ? 'Your microphone is broadcast to all participants in this station.'
-                    : 'Click "Take the Mic" to enable your microphone and start speaking.'}
-                </div>
-              </div>
+      {/* Floating Glass Dock Controls */}
+      <footer className="sticky bottom-4 z-40 max-w-3xl mx-auto px-4 w-full">
+        <div className="glass-dock rounded-3xl p-3 sm:p-4 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          {/* Status info & Role Switcher */}
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="w-9 h-9 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-lg shadow-inner">
+              {isCanPublish ? '🎙️' : '🎧'}
             </div>
-
-            {/* Toggle Mic / Step Down */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              {isCanPublish ? (
-                <button
-                  onClick={handleToggleSpeak}
-                  disabled={promoting}
-                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#182132] hover:bg-[#202b40] text-gray-300 text-xs font-medium border border-[#293750] transition-all focus:outline-none focus:ring-2 focus:ring-teal-400"
-                >
-                  {promoting ? 'Updating...' : 'Step Down to Listener'}
-                </button>
-              ) : (
-                <button
-                  onClick={handleToggleSpeak}
-                  disabled={promoting}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-teal-500 text-gray-950 font-bold text-xs hover:bg-teal-400 disabled:opacity-50 transition-all shadow-md shadow-teal-500/20 flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                >
-                  {promoting ? (
-                    <span>Requesting Stage...</span>
-                  ) : (
-                    <>
-                      <span>🎙️ Take the Mic (Speak)</span>
-                      <span>➔</span>
-                    </>
-                  )}
-                </button>
-              )}
+            <div>
+              <div className="text-xs font-bold text-white tracking-tight">
+                {isCanPublish ? 'Speaker on Stage' : 'Listener in Audience'}
+              </div>
+              <div className="text-[11px] text-gray-400">
+                {isCanPublish ? 'Broadcasting live to station' : 'Listen mode · Mic muted'}
+              </div>
             </div>
           </div>
 
-          {/* Standard Room Controls: Mute & Leave */}
-          <RoomControls
-            onLeave={handleLeaveRoom}
-            onRequestSpeak={isCanPublish ? undefined : handleToggleSpeak}
-          />
+          {/* Controls: Take Mic / Step Down & Mute/Leave */}
+          <div className="flex items-center gap-3">
+            {isCanPublish ? (
+              <button
+                onClick={handleToggleSpeak}
+                disabled={promoting}
+                className="px-3.5 py-2 rounded-xl glass-pill text-gray-300 hover:text-white text-xs font-medium focus:outline-none"
+              >
+                {promoting ? 'Updating...' : 'Step Down'}
+              </button>
+            ) : (
+              <button
+                onClick={handleToggleSpeak}
+                disabled={promoting}
+                className="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-gray-950 font-bold text-xs disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(20,184,166,0.35)] flex items-center gap-1.5 focus:outline-none"
+              >
+                {promoting ? (
+                  <span>Requesting Stage...</span>
+                ) : (
+                  <>
+                    <span>🎙️ Take the Mic</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Standard Room Controls: Mute & Leave */}
+            <RoomControls
+              onLeave={handleLeaveRoom}
+              onRequestSpeak={isCanPublish ? undefined : handleToggleSpeak}
+            />
+          </div>
         </div>
       </footer>
     </div>
