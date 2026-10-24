@@ -397,8 +397,8 @@ export default function RandomConnectPage() {
                     💎 Active
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-800 font-bold">
-                    💎 ₹99
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-200">
+                    🛠️ In Dev
                   </span>
                 )}
               </button>

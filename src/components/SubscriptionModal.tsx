@@ -55,6 +55,9 @@ function getServerSnapshot(): boolean {
   return false;
 }
 
+// Set to true to display the "In Development Mode" banner and pause real payments
+const IS_DEV_MODE = true;
+
 export function SubscriptionModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -90,6 +93,11 @@ export function SubscriptionModal() {
   }, []);
 
   const handleSubscribe = useCallback(async () => {
+    if (IS_DEV_MODE) {
+      setErrorMessage('Premium subscriptions are currently in development mode. Real payments are paused.');
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -213,14 +221,14 @@ export function SubscriptionModal() {
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-mono uppercase tracking-wider mb-1.5 font-bold">
-              <span>💎 STATIONTALK PREMIUM</span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-mono uppercase tracking-wider mb-1.5 font-bold">
+              <span>🛠️ IN DEVELOPMENT MODE</span>
             </div>
             <h2 id="subscription-modal-title" className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
               Match With Girls Only
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Upgrade your 1:1 voice express to connect exclusively with female co-passengers.
+              Connect exclusively with female co-passengers in 1:1 voice chat.
             </p>
           </div>
 
@@ -233,6 +241,19 @@ export function SubscriptionModal() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
+
+        {/* In Development Mode Alert Box */}
+        <div className="mb-5 p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-3 text-amber-900 shadow-sm">
+          <span className="text-2xl shrink-0">🚧</span>
+          <div className="text-xs space-y-1">
+            <p className="font-extrabold text-amber-950 text-sm">
+              Premium is in Development Mode
+            </p>
+            <p className="text-amber-900/90 leading-relaxed">
+              The Girls-Only matching filter and payment gateway are currently in development mode. Real payment processing will go live soon!
+            </p>
+          </div>
         </div>
 
         {/* Error / Success Banners */}
@@ -322,6 +343,24 @@ export function SubscriptionModal() {
               className="w-full py-2.5 text-slate-500 hover:text-red-600 text-xs font-mono transition-colors"
             >
               Downgrade to Free Plan
+            </button>
+          </div>
+        ) : IS_DEV_MODE ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleSubscribe}
+              disabled={isProcessing}
+              className="w-full py-3.5 bg-slate-100 border border-slate-200 text-slate-600 font-bold text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-200/70 transition-all cursor-not-allowed"
+            >
+              <span>🚧 Feature in Development — Coming Soon</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="w-full py-2.5 text-slate-600 hover:text-slate-900 text-xs font-medium text-center transition-colors"
+            >
+              Close & Continue Free 1:1 Voice Chat
             </button>
           </div>
         ) : (
