@@ -3,6 +3,41 @@
 import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { isUserPremium, setUserPremium } from '@/lib/anonymousNames';
 
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => void;
+  prefill?: {
+    name?: string;
+    contact?: string;
+  };
+  theme?: {
+    color?: string;
+  };
+  modal?: {
+    ondismiss?: () => void;
+  };
+}
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayOptions) => {
+      open: () => void;
+      on: (event: string, callback: (response: unknown) => void) => void;
+    };
+  }
+}
+
 function subscribeToPremium(callback: () => void) {
   window.addEventListener('storage', callback);
   window.addEventListener('stationtalk_premium_change', callback);
@@ -23,6 +58,8 @@ function getServerSnapshot(): boolean {
 export function SubscriptionModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const isPremium = useSyncExternalStore(
     subscribeToPremium,
@@ -30,20 +67,129 @@ export function SubscriptionModal() {
     getServerSnapshot
   );
 
+  // Dynamically load Razorpay checkout script
   useEffect(() => {
-    const handleOpen = () => setIsOpen(true);
+    if (typeof window === 'undefined') return;
+    if (document.getElementById('razorpay-checkout-script')) return;
+
+    const script = document.createElement('script');
+    script.id = 'razorpay-checkout-script';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    const handleOpen = () => {
+      setIsOpen(true);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+    };
     window.addEventListener('stationtalk_open_subscription_modal', handleOpen);
     return () => window.removeEventListener('stationtalk_open_subscription_modal', handleOpen);
   }, []);
 
-  const handleSubscribe = useCallback(() => {
+  const handleSubscribe = useCallback(async () => {
     setIsProcessing(true);
-    // Simulate Razorpay checkout integration
-    setTimeout(() => {
-      setUserPremium(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const peerId =
+      sessionStorage.getItem('stationtalk_peer_id') ||
+      `peer-${Math.random().toString(36).substring(2, 10)}`;
+
+    try {
+      // Step 1: Create Order on server
+      const orderRes = await fetch('/api/subscription/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ peerId }),
+      });
+
+      if (!orderRes.ok) {
+        throw new Error('Failed to create subscription order');
+      }
+
+      const orderData = await orderRes.json();
+
+      // Step 2: If live Razorpay client is available and not mock mode
+      if (!orderData.isTestMode && window.Razorpay && orderData.keyId) {
+        const options: RazorpayOptions = {
+          key: orderData.keyId,
+          amount: orderData.amount,
+          currency: orderData.currency || 'INR',
+          name: 'StationTalk',
+          description: 'Premium Girls Filter (1 Month)',
+          order_id: orderData.orderId,
+          handler: async (response: RazorpayResponse) => {
+            try {
+              // Step 3: Verify payment signature with server
+              const verifyRes = await fetch('/api/subscription/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  peerId,
+                  orderId: response.razorpay_order_id,
+                  paymentId: response.razorpay_payment_id,
+                  signature: response.razorpay_signature,
+                }),
+              });
+
+              if (!verifyRes.ok) throw new Error('Payment verification failed');
+
+              setUserPremium(true);
+              setSuccessMessage('Payment verified! Girls-Only Filter is now active.');
+              setTimeout(() => setIsOpen(false), 2000);
+            } catch (err) {
+              setErrorMessage('Payment verification failed. Please contact support.');
+              console.error(err);
+            } finally {
+              setIsProcessing(false);
+            }
+          },
+          theme: {
+            color: '#4f46e5',
+          },
+          modal: {
+            ondismiss: () => {
+              setIsProcessing(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', (err: unknown) => {
+          console.warn('Razorpay payment failed:', err);
+          setErrorMessage('Payment was not completed. Please try again.');
+          setIsProcessing(false);
+        });
+        rzp.open();
+      } else {
+        // Step 2b: Sandbox / Instant Simulation Mode
+        // Automatically completes verification for seamless testing
+        const verifyRes = await fetch('/api/subscription/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            peerId,
+            orderId: orderData.orderId,
+            paymentId: `pay_mock_${Date.now()}`,
+            signature: 'mock_signature',
+          }),
+        });
+
+        if (!verifyRes.ok) throw new Error('Sandbox verification failed');
+
+        setUserPremium(true);
+        setSuccessMessage('Sandbox payment verified! Girls Filter unlocked.');
+        setTimeout(() => setIsOpen(false), 1500);
+      }
+    } catch (err) {
+      console.error('Subscription error:', err);
+      setErrorMessage((err as Error).message || 'Payment initiation failed.');
+    } finally {
       setIsProcessing(false);
-      setIsOpen(false);
-    }, 1200);
+    }
   }, []);
 
   const handleCancelSubscription = useCallback(() => {
@@ -88,6 +234,18 @@ export function SubscriptionModal() {
             </svg>
           </button>
         </div>
+
+        {/* Error / Success Banners */}
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium">
+            ⚠️ {errorMessage}
+          </div>
+        )}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold">
+            ✓ {successMessage}
+          </div>
+        )}
 
         {/* Pricing Card */}
         <div className="mb-5 p-5 rounded-2xl bg-gradient-to-br from-indigo-500/[0.08] via-teal-500/[0.04] to-transparent border border-indigo-200">
@@ -178,7 +336,7 @@ export function SubscriptionModal() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Processing Razorpay Checkout...
+                Connecting to Razorpay...
               </span>
             ) : (
               <>
